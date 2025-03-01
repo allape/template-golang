@@ -2,4 +2,29 @@
 
 .wrapper {
   @include mobile.Mobile;
+
+  @media screen and (max-width: mobile.$max-width) {
+    border-radius: 0;
+    & > :global(.ant-card-head), :global(.ant-card-body) {
+      border-radius: 0;
+    }
+    :global(.ant-pagination) {
+      margin: 10px 0 0 !important;
+    }
+  }
+
+  & > :global(.ant-card-body) {
+    padding: 10px;
+  }
+
+  & > :global(.ant-card-head) {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    @media (prefers-color-scheme: dark) {
+      background-color: #333;
+    }
+  }
 }
