@@ -1,0 +1,5 @@
+@use "../../style/mobile";
+
+.wrapper {
+  @include mobile.Mobile;
+}

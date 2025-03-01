@@ -1,0 +1,32 @@
+name: golang
+services:
+  app:
+    image: allape/golang:latest
+    container_name: golang
+    restart: unless-stopped
+    environment:
+      GOLANG_DATABASE_DSN: "root:EfF74MD1l9t7TZ0VY3EF@tcp(database:3306)/golang?charset=utf8mb4&parseTime=True&loc=Local"
+    volumes:
+      - ./static:/app/static
+    networks:
+      - golang
+      - internal
+    depends_on:
+      database:
+        condition: service_healthy
+  database:
+    image: mysql:8.3.0
+    restart: unless-stopped
+    networks:
+      - internal
+    healthcheck:
+      test: "curl http://127.0.0.1:3306 > /dev/null && exit 0 || exit 1"
+    environment:
+      - MYSQL_ROOT_PASSWORD=EfF74MD1l9t7TZ0VY3EF
+      - MYSQL_DATABASE=golang
+    volumes:
+      - ./database:/var/lib/mysql
+networks:
+  golang:
+  internal:
+    internal: true
