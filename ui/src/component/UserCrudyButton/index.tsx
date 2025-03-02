@@ -68,6 +68,7 @@ export default function UserCrudyButton(
       columns={columns}
       crudy={UserCrudy}
       searchParams={searchParams}
+      scroll={{ y: "calc(100vh - 300px)" }}
       {...props}
     >
       <Form.Item
