@@ -11,6 +11,7 @@ import (
 func SetupUserController(group *gin.RouterGroup, db *gorm.DB) error {
 	err := gocrud.New(group, db, gocrud.Crud[model.User]{
 		DefaultPageSize: DefaultPageSize,
+		EnableGetAll:    true,
 		SearchHandlers: map[string]gocrud.SearchHandler{
 			"like_name": gocrud.KeywordLike("name", nil),
 			"in_id":     gocrud.KeywordIDIn("id", gocrud.OverflowedArrayTrimmerFilter[gocrud.ID](DefaultPageSize)),

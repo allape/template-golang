@@ -11,6 +11,7 @@ import { ReactElement, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserCrudy } from "../../api/user.ts";
 import { IUser, IUserSearchParams } from "../../model/user.ts";
+import PagedUserSelector from "../UserSelector/PagedUserSelector.tsx";
 
 type IRecord = IUser;
 type ISearchParams = IUserSearchParams;
@@ -31,6 +32,18 @@ export default function UserCrudyButton(
       {
         title: t("id"),
         dataIndex: "id",
+        filtered: !!searchParams["in_id"],
+        ...searchable<IRecord, IUser["id"]>(
+          t("id"),
+          (value) =>
+            setSearchParams((old) => ({
+              ...old,
+              in_id: value ? [value] : undefined,
+            })),
+          (value, onChange) => (
+            <PagedUserSelector value={value} onChange={onChange} />
+          ),
+        ),
       },
       {
         title: t("user.name"),

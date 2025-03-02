@@ -1,6 +1,5 @@
 import { BaseSearchParams } from "@allape/gocrud";
-import { CrudySelector } from "@allape/gocrud-react";
-import { ICrudySelectorProps } from "@allape/gocrud-react/src/component/CrudySelector";
+import { ICrudySelectorProps, PagedCrudySelector } from "@allape/gocrud-react";
 import { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { UserCrudy } from "../../api/user.ts";
@@ -11,7 +10,7 @@ type ISearchParams = IUserSearchParams;
 
 export type IUserSelectorSelectorProps = Partial<ICrudySelectorProps<IRecord>>;
 
-export default function UserSelector(
+export default function PagedUserSelector(
   props: PropsWithChildren<IUserSelectorSelectorProps>,
 ): ReactElement {
   const { t } = useTranslation();
@@ -25,11 +24,14 @@ export default function UserSelector(
   );
 
   return (
-    <CrudySelector<IRecord, ISearchParams>
+    <PagedCrudySelector<IRecord, ISearchParams>
       placeholder={`${t("select")} ${t("user._")}`}
       {...props}
       crudy={UserCrudy}
+      pageSize={1000}
       searchParams={sp}
+      searchPropName="like_name"
+      inKeyword="in_id"
     />
   );
 }

@@ -47,7 +47,7 @@ export default function User(): ReactElement {
         dataIndex: "id",
         filtered: !!searchParams["in_id"],
         ...searchable<IRecord, IUser["id"]>(
-          t("user.name"),
+          t("user.id"),
           (value) =>
             setSearchParams((old) => ({
               ...old,
