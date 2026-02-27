@@ -5,10 +5,14 @@ Template Project for My Golang CRUD
 ### Dev
 
 ```shell
-npm install
+go run .
+```
+
+```shell
+npm i
 npm run dev
 ```
 
 # Credits
 
-- [favicon.png](asset/favicon.png): https://www.irasutoya.com/2018/01/cd.html
+- [favicon.png](asset/favicon.png): https://www.irasutoya.com/2012/05/blog-post_26.html
