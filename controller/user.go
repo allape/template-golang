@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"strings"
+
 	"github.com/allape/gocrud"
 	"github.com/allape/golang/model"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"strings"
 )
 
 func SetupUserController(group *gin.RouterGroup, db *gorm.DB) error {
