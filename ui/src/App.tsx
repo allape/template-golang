@@ -3,7 +3,7 @@ import { Locale } from "antd/es/locale";
 import zhCN from "antd/locale/zh_CN";
 import { ReactElement } from "react";
 import styles from "./style.module.scss";
-import User from "./view/User";
+import Gallery from "./view/Gallery";
 
 function getLocale(): Locale | undefined {
   const language = i18n.getLanguage();
@@ -18,7 +18,7 @@ export default function App(): ReactElement {
   return (
     <ThemeProvider locale={getLocale()}>
       <div className={styles.wrapper}>
-        <User />
+        <Gallery />
       </div>
     </ThemeProvider>
   );

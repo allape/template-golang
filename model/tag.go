@@ -4,8 +4,10 @@ import (
 	"github.com/allape/gocrud"
 )
 
-type User struct {
+type Tag struct {
 	gocrud.Base
 	Name        string `json:"name"`
+	Alias       string `json:"alias"`
+	Priority    int64  `json:"priority"`
 	Description string `json:"description"`
 }

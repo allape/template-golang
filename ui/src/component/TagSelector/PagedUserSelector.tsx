@@ -2,32 +2,32 @@ import { BaseSearchParams } from "@allape/gocrud";
 import { ICrudySelectorProps, PagedCrudySelector } from "@allape/gocrud-react";
 import { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { UserCrudy } from "../../api/user.ts";
-import { IUser, IUserSearchParams } from "../../model/user.ts";
+import { TagCrudy } from "../../api/tag.ts";
+import { ITag, ITagSearchParams } from "../../model/tag.ts";
 
-type IRecord = IUser;
-type ISearchParams = IUserSearchParams;
+type IRecord = ITag;
+type ISearchParams = ITagSearchParams;
 
-export type IUserSelectorSelectorProps = Partial<ICrudySelectorProps<IRecord>>;
+export type ITagSelectorSelectorProps = Partial<ICrudySelectorProps<IRecord>>;
 
-export default function PagedUserSelector(
-  props: PropsWithChildren<IUserSelectorSelectorProps>,
+export default function PagedTagSelector(
+  props: PropsWithChildren<ITagSelectorSelectorProps>,
 ): ReactElement {
   const { t } = useTranslation();
 
   const sp = useMemo<ISearchParams>(
     () => ({
       ...BaseSearchParams,
-      orderBy_index: "asc",
+      orderBy_priority: "desc",
     }),
     [],
   );
 
   return (
     <PagedCrudySelector<IRecord, ISearchParams>
-      placeholder={`${t("select")} ${t("user._")}`}
+      placeholder={`${t("select")} ${t("tag._")}`}
       {...props}
-      crudy={UserCrudy}
+      crudy={TagCrudy}
       pageSize={1000}
       searchParams={sp}
       searchPropName="like_name"

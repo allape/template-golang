@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -19,42 +20,46 @@ import (
 var l = gogger.New("main")
 
 func main() {
-	err := gogger.InitFromEnv()
+	err := SetupLogger()
 	if err != nil {
-		l.Error().Fatalf("Failed to init logger: %v", err)
+		l.Error().Fatalf("failed to init logger: %v", err)
+		return
 	}
 
-	db, err := gorm.Open(mysql.Open(env.DatabaseDSN), &gorm.Config{
-		Logger: logger.New(gogger.New("db").Debug(), logger.Config{
-			SlowThreshold: 200 * time.Millisecond,
-			LogLevel:      logger.Info,
-			Colorful:      true,
-		}),
-	})
+	db, err := SetupDatabase()
 	if err != nil {
-		l.Error().Fatalf("Failed to open database: %v", err)
+		l.Error().Fatalf("failed to setup database: %v", err)
+		return
 	}
 
-	err = db.AutoMigrate(
-		&model.User{},
-	)
+	engine, err := SetupControllers(db)
 	if err != nil {
-		l.Error().Fatalf("Failed to auto migrate database: %v", err)
+		l.Error().Fatalf("failed to setup controllers: %v", err)
+		return
 	}
 
+	go func() {
+		err := engine.Run(env.BindAddr)
+		if err != nil {
+			l.Error().Fatalf("failed to start http server: %v", err)
+		}
+	}()
+
+	gogger.New("ctrl-c").Info().Println("exiting with", gocrud.Wait4CtrlC())
+}
+
+func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 	engine := gin.Default()
 
-	if env.EnableCors {
+	if env.DebugMode {
 		engine.Use(gocrud.NewCors())
 	}
 
-	apiGrp := engine.Group("/api")
-
-	err = gocrud.NewSingleHTMLServe(engine.Group("/ui"), env.UIFolder, &gocrud.SingleHTMLServeConfig{
+	err := gocrud.NewSingleHTMLServe(engine.Group("/ui"), env.UIFolder, &gocrud.SingleHTMLServeConfig{
 		AllowReplace: true,
 	})
 	if err != nil {
-		l.Error().Fatalf("Failed to setup single html serve: %v", err)
+		return nil, fmt.Errorf("failed to setup single html serve: %v", err)
 	}
 
 	err = gocrud.NewHttpFileSystem(engine.Group("/static"), env.StaticFolder, &gocrud.HttpFileSystemConfig{
@@ -63,11 +68,6 @@ func main() {
 		EnableDigest:   true,
 	})
 
-	err = controller.SetupUserController(apiGrp.Group("/user"), db)
-	if err != nil {
-		l.Error().Fatalf("Failed to setup user controller: %v", err)
-	}
-
 	engine.GET("/", func(context *gin.Context) {
 		context.Redirect(http.StatusMovedPermanently, "/ui/")
 	})
@@ -75,12 +75,69 @@ func main() {
 		context.Data(http.StatusOK, asset.FaviconMIME, asset.Favicon)
 	})
 
-	go func() {
-		err := engine.Run(env.BindAddr)
-		if err != nil {
-			l.Error().Fatalf("Failed to start http server: %v", err)
-		}
-	}()
+	apiGrp := engine.Group("/api")
 
-	gogger.New("ctrl-c").Info().Println("Exiting with", gocrud.Wait4CtrlC())
+	err = controller.SetupTagController(apiGrp.Group("/tag"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup tag controller: %v", err)
+	}
+
+	err = controller.SetupItemController(apiGrp.Group("/item"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup item controller: %v", err)
+	}
+
+	err = controller.SetupGalleryController(apiGrp.Group("/gallery"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup gallery controller: %v", err)
+	}
+
+	return engine, nil
+}
+
+func SetupLogger() error {
+	err := gogger.InitFromEnv()
+	if err != nil {
+		return err
+	}
+
+	if env.DebugMode {
+		gogger.Level = gogger.Debug
+	}
+
+	return nil
+}
+
+func SetupDatabase() (*gorm.DB, error) {
+	db, err := gorm.Open(mysql.Open(env.DatabaseDSN), &gorm.Config{
+		Logger: logger.New(gogger.New("db").Debug(), logger.Config{
+			SlowThreshold: 200 * time.Millisecond,
+			LogLevel:      logger.Info,
+			Colorful:      true,
+		}),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	err = db.AutoMigrate(
+		&model.Tag{},
+		&model.Item{},
+		&model.ItemTag{},
+		&model.Gallery{},
+		&model.GalleryItem{},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to migrate models: %v", err)
+	}
+
+	// MyISAM tables in MySQL
+	//err = db.Set("gorm:table_options", "ENGINE=MyISAM CHARSET=utf8mb4").AutoMigrate(
+	//	&model.AccessLog{},
+	//)
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to auto migrate MyISAM tables: %v", err)
+	//}
+
+	return db, nil
 }

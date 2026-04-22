@@ -3,16 +3,16 @@ import { CrudySelector } from "@allape/gocrud-react";
 import { ICrudySelectorProps } from "@allape/gocrud-react/src/component/CrudySelector";
 import { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { UserCrudy } from "../../api/user.ts";
-import { IUser, IUserSearchParams } from "../../model/user.ts";
+import { TagCrudy } from "../../api/tag.ts";
+import { ITag, ITagSearchParams } from "../../model/tag.ts";
 
-type IRecord = IUser;
-type ISearchParams = IUserSearchParams;
+type IRecord = ITag;
+type ISearchParams = ITagSearchParams;
 
-export type IUserSelectorSelectorProps = Partial<ICrudySelectorProps<IRecord>>;
+export type ITagSelectorSelectorProps = Partial<ICrudySelectorProps<IRecord>>;
 
-export default function UserSelector(
-  props: PropsWithChildren<IUserSelectorSelectorProps>,
+export default function TagSelector(
+  props: PropsWithChildren<ITagSelectorSelectorProps>,
 ): ReactElement {
   const { t } = useTranslation();
 
@@ -26,9 +26,9 @@ export default function UserSelector(
 
   return (
     <CrudySelector<IRecord, ISearchParams>
-      placeholder={`${t("select")} ${t("user._")}`}
+      placeholder={`${t("select")} ${t("tag._")}`}
       {...props}
-      crudy={UserCrudy}
+      crudy={TagCrudy}
       searchParams={sp}
     />
   );
