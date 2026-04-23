@@ -87,9 +87,19 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup item controller: %v", err)
 	}
 
+	err = controller.SetupItemTagController(apiGrp.Group("/item-tag"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup item tag controller: %v", err)
+	}
+
 	err = controller.SetupGalleryController(apiGrp.Group("/gallery"), db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup gallery controller: %v", err)
+	}
+
+	err = controller.SetupGalleryItemController(apiGrp.Group("/gallery-item"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup gallery item controller: %v", err)
 	}
 
 	return engine, nil

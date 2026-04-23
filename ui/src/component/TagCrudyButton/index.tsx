@@ -6,7 +6,7 @@ import {
   searchable,
 } from "@allape/gocrud-react";
 import { ICrudyButtonProps } from "@allape/gocrud-react/src/component/CrudyButton";
-import { Form, Input, InputNumber, TableColumnsType } from "antd";
+import { Form, Input, InputNumber, TableColumnsType, Tag } from "antd";
 import { ReactElement, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TagCrudy } from "../../api/tag.ts";
@@ -35,6 +35,7 @@ export default function TagCrudyButton(
       {
         title: t("id"),
         dataIndex: "id",
+        width: 50,
       },
       {
         title: t("tag.priority"),
@@ -43,6 +44,7 @@ export default function TagCrudyButton(
       {
         title: t("tag.name"),
         dataIndex: "name",
+        render: (v, record) => <Tag color={record.color}>{v}</Tag>,
         filtered: !!searchParams["like_name"],
         ...searchable(t("tag.name"), (value) =>
           setSearchParams((old) => ({
@@ -54,6 +56,7 @@ export default function TagCrudyButton(
       {
         title: t("tag.alias"),
         dataIndex: "alias",
+        render: (v) => <div className="nowrap">{v}</div>,
         filtered: !!searchParams["like_alias"],
         ...searchable(t("tag.alias"), (value) =>
           setSearchParams((old) => ({
@@ -106,6 +109,10 @@ export default function TagCrudyButton(
 
       <Form.Item name="alias" label={t("tag.alias")}>
         <Input maxLength={200} placeholder={t("tag.alias")} />
+      </Form.Item>
+
+      <Form.Item name="color" label={t("tag.color")}>
+        <input type="color" placeholder={t("tag.color")} />
       </Form.Item>
 
       <Form.Item name="description" label={t("tag.description")}>

@@ -12,6 +12,7 @@ const MaxItemNameLength = 50
 type Item struct {
 	gocrud.Base
 	Name        string            `json:"name"`
+	Src         string            `json:"src"`
 	Priority    int64             `json:"priority"`
 	Description string            `json:"description"`
 	CreatedBy   gophorward.UserID `json:"createdBy"`

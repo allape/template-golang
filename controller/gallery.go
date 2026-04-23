@@ -17,6 +17,8 @@ var galleryl = gogger.New("controller:gallery")
 func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 	err := gocrud.New(group, db, gocrud.Crud[model.Gallery]{
 		DefaultPageSize: DefaultPageSize,
+		EnableGetAll:    true,
+		WillGetAll:      willGetAllInID,
 		SearchHandlers: map[string]gocrud.SearchHandler{
 			"in_id":             gocrud.KeywordIDIn("id", gocrud.OverflowedArrayTrimmerFilter[gocrud.ID](DefaultPageSize)),
 			"like_name":         gocrud.KeywordLike("name", nil),
@@ -50,118 +52,15 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		return err
 	}
 
-	// /items/1?itemIds=1,2,3...
-	group.POST("/items/{galleryId}", func(c *gin.Context) {
-		galleryId := gocrud.Pick(gocrud.IDsFromCommaSeparatedString(c.Param("galleryId")), 0, 0)
-		if galleryId == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "galleryId is required")
-			return
-		}
-
-		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("id = ?", galleryId).First(&gallery).Error; err != nil {
-			galleryl.Error().Printf("failed to find gallery %d: %v", galleryId, err)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found [error]")
-			return
-		} else if gallery.ID == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found")
-			return
-		}
-
-		itemIds := gocrud.IDsFromCommaSeparatedString(c.Query("itemIds"))
-		if len(itemIds) == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "itemIds is required")
-			return
-		}
-
-		var items []model.Item
-		if err := db.Model(&model.Item{}).Where("id IN ?", itemIds).Find(&items).Error; err != nil {
-			galleryl.Error().Printf("failed to find items %v: %v", itemIds, err)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.InternalServerError(), "failed to find items [error]")
-			return
-		} else if len(items) == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "items is empty")
-			return
-		}
-
-		galleryItems := make([]model.GalleryItem, len(items))
-		for i, item := range items {
-			galleryItems[i] = model.GalleryItem{
-				GalleryID: gallery.ID,
-				ItemID:    item.ID,
-			}
-		}
-
-		res := db.Save(&galleryItems)
-		if res.Error != nil {
-			galleryl.Error().Printf("failed to save gallery items: %v", res.Error)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.InternalServerError(), "failed to save gallery items [error]")
-			return
-		}
-
-		gocrud.MakeOkayDataResponse(c, res.RowsAffected)
-	})
-
-	// /items/1?itemIds=1,2,3...
-	group.DELETE("/items/{galleryId}", func(c *gin.Context) {
-		galleryId := gocrud.Pick(gocrud.IDsFromCommaSeparatedString(c.Param("galleryId")), 0, 0)
-		if galleryId == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "galleryId is required")
-			return
-		}
-
-		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("id = ?", galleryId).First(&gallery).Error; err != nil {
-			galleryl.Error().Printf("failed to find gallery %d: %v", galleryId, err)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found [error]")
-			return
-		} else if gallery.ID == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found")
-			return
-		}
-
-		itemIds := gocrud.IDsFromCommaSeparatedString(c.Query("itemIds"))
-		if len(itemIds) == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "itemIds is required")
-			return
-		}
-
-		res := db.Model(&model.GalleryItem{}).Delete("gallery_id = ? AND item_id IN ?", gallery.ID, itemIds)
-		if res.Error != nil {
-			galleryl.Error().Printf("failed to delete gallery items: %v", res.Error)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.InternalServerError(), "failed to delete gallery items [error]")
-			return
-		}
-
-		gocrud.MakeOkayDataResponse(c, res.RowsAffected)
-	})
-
-	group.DELETE("/empty-gallery/{galleryId}", func(c *gin.Context) {
-		galleryId := gocrud.Pick(gocrud.IDsFromCommaSeparatedString(c.Param("galleryId")), 0, 0)
-		if galleryId == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "galleryId is required")
-			return
-		}
-
-		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("id = ?", galleryId).First(&gallery).Error; err != nil {
-			galleryl.Error().Printf("failed to find gallery %d: %v", galleryId, err)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found [error]")
-			return
-		} else if gallery.ID == 0 {
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.BadRequest(), "gallery not found")
-			return
-		}
-
-		res := db.Model(&model.GalleryItem{}).Delete("gallery_id = ?", gallery.ID)
-		if res.Error != nil {
-			galleryl.Error().Printf("failed to delete gallery item for id %d: %v", galleryId, res.Error)
-			gocrud.MakeErrorResponse(c, gocrud.RestCoder.InternalServerError(), "failed to delete gallery item [error]")
-			return
-		}
-
-		gocrud.MakeOkayDataResponse(c, res.RowsAffected)
-	})
-
 	return nil
+}
+
+func SetupGalleryItemController(group *gin.RouterGroup, db *gorm.DB) error {
+	return setupDualPrimaryKeyModelController[model.GalleryItem](
+		group, db,
+		"GalleryID", "ItemID",
+		"galleryId", "itemId",
+		"gallery_id", "item_id",
+		galleryl, DefaultPageSize,
+	)
 }

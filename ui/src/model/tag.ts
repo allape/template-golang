@@ -5,6 +5,7 @@ export interface ITag extends IBase {
   name: string;
   alias: string;
   priority: number;
+  color: string;
   description: string;
 }
 
@@ -15,5 +16,6 @@ export interface ITagSearchParams
   in_id?: ITag["id"][];
   like_name?: string;
   like_alias?: string;
+  like_keyword?: string;
   orderBy_priority?: SortType;
 }

@@ -6,7 +6,9 @@ import {
   searchable,
 } from "@allape/gocrud-react";
 import NewCrudyButtonEventEmitter from "@allape/gocrud-react/src/component/CrudyButton/eventemitter.ts";
-import { MoreOutlined } from "@ant-design/icons";
+import { Size } from "@allape/gocrud-react/src/hook/useMobile.ts";
+import { UseLoadingReturn } from "@allape/use-loading/lib/hook/useLoading";
+import { CameraOutlined, MoreOutlined } from "@ant-design/icons";
 import {
   Button,
   Divider,
@@ -19,12 +21,15 @@ import {
   TableColumnsType,
   Tag,
 } from "antd";
-import { ReactElement, useMemo, useState } from "react";
+import { ReactElement, ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GalleryCrudy } from "../../api/gallery.ts";
+import ItemCrudyButton from "../../component/ItemCrudyButton";
 import TagCrudyButton from "../../component/TagCrudyButton";
 import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
+import { IItem, IItemSearchParams } from "../../model/item.ts";
 import { ITag, ITagSearchParams } from "../../model/tag.ts";
+import styles from './style.module.scss';
 
 type IRecord = IGallery;
 type ISearchParams = IGallerySearchParams;
@@ -40,6 +45,7 @@ export default function Gallery(): ReactElement {
   const emitter = useMemo(
     () => ({
       Tag: NewCrudyButtonEventEmitter<ITag, ITagSearchParams>(),
+      Item: NewCrudyButtonEventEmitter<IItem, IItemSearchParams>(),
     }),
     [],
   );
@@ -120,70 +126,112 @@ export default function Gallery(): ReactElement {
           emitter.Tag.dispatchEvent("open");
         },
       },
+      {
+        key: "Item",
+        label: `${t("gocrud.manage")} ${t("item._")}`,
+        onClick: () => {
+          emitter.Item.dispatchEvent("open", {
+            in_galleryId: undefined,
+          });
+        },
+      },
     ],
     [emitter, t],
   );
 
-  return (
-    <CrudyTable<IRecord>
-      name={t("gallery._")}
-      title={t("gallery._")}
-      crudy={GalleryCrudy}
-      columns={columns}
-      searchParams={searchParams}
-      defaultFormValue={DefaultFormValue}
-      titleExtra={
+  const handleActions = useCallback(
+    (options: {
+      record: IRecord;
+      execute: UseLoadingReturn["execute"];
+      size?: Size;
+    }): ReactNode => {
+      return (
         <>
-          <Divider type="vertical" />
-          <div>
+          <Button
+            type="link"
+            onClick={() => {
+              emitter.Item.dispatchEvent("open", {
+                in_galleryId: [options.record.id],
+              });
+            }}
+            title={t("gallery.photos")}
+            size={options.size}
+          >
+            <CameraOutlined />
+          </Button>
+        </>
+      );
+    },
+    [emitter, t],
+  );
+
+  return (
+    <>
+      <CrudyTable<IRecord>
+        name={t("gallery._")}
+        title={t("gallery._")}
+        crudy={GalleryCrudy}
+        columns={columns}
+        searchParams={searchParams}
+        defaultFormValue={DefaultFormValue}
+        actions={handleActions}
+        titleExtra={
+          <>
+            <Divider type="vertical" />
             <Dropdown menu={{ items: menus }}>
               <Button>
                 <MoreOutlined />
               </Button>
             </Dropdown>
-          </div>
-          <div style={{ display: "none" }}>
-            <TagCrudyButton emitter={emitter.Tag} />
-          </div>
-        </>
-      }
-    >
-      <Form.Item name="isPublic" label={t("gallery.isPublic")}>
-        <Switch
-          checkedChildren={t("gallery.isPublicYesOrNo.yes")}
-          unCheckedChildren={t("gallery.isPublicYesOrNo.no")}
-        />
-      </Form.Item>
-
-      <Form.Item name="priority" label={t("gallery.priority")}>
-        <InputNumber
-          precision={0}
-          step={1}
-          min={Number.MIN_SAFE_INTEGER}
-          max={Number.MAX_SAFE_INTEGER}
-          placeholder={t("gallery.priority")}
-        />
-      </Form.Item>
-
-      <Form.Item
-        name="name"
-        label={t("gallery.name")}
-        rules={[{ required: true }]}
+            <div style={{ display: "none" }}>
+              <TagCrudyButton emitter={emitter.Tag} />
+              <ItemCrudyButton emitter={emitter.Item} />
+            </div>
+          </>
+        }
       >
-        <Input maxLength={200} placeholder={t("gallery.name")} />
-      </Form.Item>
+        <Form.Item name="isPublic" label={t("gallery.isPublic")}>
+          <Switch
+            checkedChildren={t("gallery.isPublicYesOrNo.yes")}
+            unCheckedChildren={t("gallery.isPublicYesOrNo.no")}
+          />
+        </Form.Item>
 
-      <Form.Item name="createdBy" label={t("gallery.createdBy")}>
-        <Input maxLength={200} placeholder={t("gallery.createdBy")} />
-      </Form.Item>
+        <Form.Item name="priority" label={t("gallery.priority")}>
+          <InputNumber
+            precision={0}
+            step={1}
+            min={Number.MIN_SAFE_INTEGER}
+            max={Number.MAX_SAFE_INTEGER}
+            placeholder={t("gallery.priority")}
+          />
+        </Form.Item>
 
-      <Form.Item name="description" label={t("gallery.description")}>
-        <Input.TextArea
-          maxLength={20000}
-          rows={10}
-          placeholder={t("gallery.description")}
-        />
-      </Form.Item>
-    </CrudyTable>
+        <Form.Item
+          name="name"
+          label={t("gallery.name")}
+          rules={[{ required: true }]}
+        >
+          <Input maxLength={200} placeholder={t("gallery.name")} />
+        </Form.Item>
+
+        <Form.Item name="createdBy" label={t("gallery.createdBy")}>
+          <Input maxLength={200} placeholder={t("gallery.createdBy")} />
+        </Form.Item>
+
+        <Form.Item name="description" label={t("gallery.description")}>
+          <Input.TextArea
+            maxLength={20000}
+            rows={10}
+            placeholder={t("gallery.description")}
+          />
+        </Form.Item>
+      </CrudyTable>
+      <Dropdown className={styles.fixedMenu} menu={{ items: menus }}>
+        <Button>
+          <MoreOutlined />
+        </Button>
+      </Dropdown>
+    </>
   );
 }
