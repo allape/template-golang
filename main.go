@@ -8,6 +8,7 @@ import (
 	"github.com/allape/gocrud"
 	"github.com/allape/gogger"
 	"github.com/allape/golang/asset"
+	"github.com/allape/golang/client"
 	"github.com/allape/golang/controller"
 	"github.com/allape/golang/env"
 	"github.com/allape/golang/model"
@@ -41,7 +42,20 @@ func main() {
 	go func() {
 		err := engine.Run(env.BindAddr)
 		if err != nil {
-			l.Error().Fatalf("failed to start http server: %v", err)
+			l.Error().Fatalf("failed to start server: %v", err)
+		}
+	}()
+
+	enginClient, err := client.SetupControllers(db)
+	if err != nil {
+		l.Error().Fatalf("failed to setup client controllers: %v", err)
+		return
+	}
+
+	go func() {
+		err := enginClient.Run(env.BindClientAddr)
+		if err != nil {
+			l.Error().Fatalf("failed to start client server: %v", err)
 		}
 	}()
 
@@ -54,6 +68,8 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 	if env.DebugMode {
 		engine.Use(gocrud.NewCors())
 	}
+
+	engine.Use(gocrud.RecoveryHandler(env.DebugMode))
 
 	err := gocrud.NewSingleHTMLServe(engine.Group("/ui"), env.UIFolder, &gocrud.SingleHTMLServeConfig{
 		AllowReplace: true,

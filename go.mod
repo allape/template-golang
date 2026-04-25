@@ -6,7 +6,7 @@ require (
 	github.com/allape/gocrud v0.0.0-20260423100001-68d2a8f817fe
 	github.com/allape/goenv v0.0.0-20241202051618-ce41afb81ebf
 	github.com/allape/gogger v0.0.0-20241208090122-dda745ad2428
-	github.com/allape/gophorward v0.0.0-20260419124009-391e4c0c1729
+	github.com/allape/gophorward v0.0.0-20260425142709-d4f21d41ae11
 	github.com/gin-gonic/gin v1.12.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1

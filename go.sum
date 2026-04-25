@@ -10,8 +10,8 @@ github.com/allape/gogger v0.0.0-20241208090122-dda745ad2428 h1:W+RoD+ZjKjyV+46gV
 github.com/allape/gogger v0.0.0-20241208090122-dda745ad2428/go.mod h1:bMF4nf4lEzayulJFQqBPMcC/3BCYQUvhs8OYHB3AZpI=
 github.com/allape/gomysqlaes v0.0.0-20241202054245-51a6dcfcbd79 h1:v/lcX4MWuhH0RnuTdhcbmjXvxBonGpTbUjsU1qj1tAA=
 github.com/allape/gomysqlaes v0.0.0-20241202054245-51a6dcfcbd79/go.mod h1:+FFRMP5PEr5SyJOooNLfCjCiUycIWbKWG/m7RqQ2uFk=
-github.com/allape/gophorward v0.0.0-20260419124009-391e4c0c1729 h1:3FZkiQESR0y29NOFmpUmYiWS2ZnveEhlvctMhR0A1q4=
-github.com/allape/gophorward v0.0.0-20260419124009-391e4c0c1729/go.mod h1:4aZ1UqSJjTeTW1Ubs0Y9uCtFSti2NQp6wVqKqvNuQG0=
+github.com/allape/gophorward v0.0.0-20260425142709-d4f21d41ae11 h1:8iXjfidi+5eQyblxS9mZhmMLhyCBsMQvkojMooeaGGE=
+github.com/allape/gophorward v0.0.0-20260425142709-d4f21d41ae11/go.mod h1:4aZ1UqSJjTeTW1Ubs0Y9uCtFSti2NQp6wVqKqvNuQG0=
 github.com/allape/gosalty v0.0.0-20241204072201-5664235f50dc h1:OUjdqRxgSU7HKEFcKzp9MxQ7qKGQyfEgM9e4RBo25fc=
 github.com/allape/gosalty v0.0.0-20241204072201-5664235f50dc/go.mod h1:fIWaPHKxURgID+zYI56AD6Sn/oJyMJBizkDhO3n4mRg=
 github.com/bytedance/gopkg v0.1.4 h1:oZnQwnX82KAIWb7033bEwtxvTqXcYMxDBaQxo5JJHWM=
