@@ -20,6 +20,18 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		engine.Use(gocrud.NewCors())
 	}
 
+	if env.ClientDebugMode {
+		// FIXME comment this when production
+		engine.Use(func(c *gin.Context) {
+			header := c.Request.Header
+			user, ok := gophorward.HttpHeaderGetUser(header)
+			if !ok || user == nil || user.ID == "" {
+				header.Add(gophorward.HeaderUserID, env.ClientDebugUserID)
+				header.Add(gophorward.HeaderUserName, env.ClientDebugUserName)
+			}
+		})
+	}
+
 	engine.Use(gocrud.RecoveryHandler(env.DebugMode))
 
 	engine.Use(gophorward.GinMiddlewareHandler(func(context *gin.Context) {
@@ -37,7 +49,7 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		context.Redirect(http.StatusMovedPermanently, "/ui/")
 	})
 	engine.GET("/favicon.ico", func(context *gin.Context) {
-		context.Data(http.StatusOK, asset.FaviconMIME, asset.Favicon)
+		context.Data(http.StatusOK, asset.MIME, asset.Favicon)
 	})
 
 	apiGrp := engine.Group("/api")

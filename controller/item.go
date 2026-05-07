@@ -60,7 +60,7 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 }
 
 func SetupItemTagController(group *gin.RouterGroup, db *gorm.DB) error {
-	return setupDualPrimaryKeyModelController[model.ItemTag](
+	return SetupDualPrimaryKeyModelController[model.ItemTag](
 		group, db,
 		"ItemID", "TagID",
 		"itemId", "tagId",

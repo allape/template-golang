@@ -116,9 +116,9 @@ export default function ItemCrudyButton({
         render: (v: IRecord["_tags"]) =>
           v && v.length > 0
             ? v.map((i) => (
-                <Tag key={i.id} color={i.color}>
-                  {i.name}
-                </Tag>
+                <div key={i.id}>
+                  <Tag color={i.color}>{i.name}</Tag>
+                </div>
               ))
             : "---",
       },
@@ -127,7 +127,11 @@ export default function ItemCrudyButton({
         dataIndex: "_galleries",
         render: (v: IRecord["_galleries"]) =>
           v && v.length > 0
-            ? v.map((i) => <Tag key={i.id}>{i.name}</Tag>)
+            ? v.map((i) => (
+                <div key={i.id}>
+                  <Tag>{i.name}</Tag>
+                </div>
+              ))
             : "---",
       },
       {

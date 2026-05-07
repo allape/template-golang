@@ -27,14 +27,14 @@ func willGetAllInID(context *gin.Context, db *gorm.DB) *gorm.DB {
 	return db
 }
 
-func setupDualPrimaryKeyModelController[T any](
+func SetupDualPrimaryKeyModelController[T any](
 	group *gin.RouterGroup, db *gorm.DB,
-	fieldName1, fieldName2 string,
+	objectFieldName1, objectFieldName2 string,
 	jsonFieldName1, jsonFieldName2 string,
 	databaseFieldName1, databaseFieldName2 string,
 	logger *gogger.Logger, maxCount int,
 ) error {
-	if fieldName1 == "" || fieldName2 == "" {
+	if objectFieldName1 == "" || objectFieldName2 == "" {
 		return fmt.Errorf("field1 and field2 cannot be empty")
 	}
 
@@ -83,16 +83,23 @@ func setupDualPrimaryKeyModelController[T any](
 
 		var pid gocrud.ID
 		var sids []gocrud.ID
+
+		var objectPrimaryFieldName string
+		var objectSecondaryFieldName string
 		var dbFieldName string
 
 		switch primaryFieldName {
 		case jsonFieldName1:
 			pid = gocrud.Pick(field1Ids, 0, 0)
 			sids = field2Ids
+			objectPrimaryFieldName = objectFieldName1
+			objectSecondaryFieldName = objectFieldName2
 			dbFieldName = databaseFieldName1
 		case jsonFieldName2:
 			pid = gocrud.Pick(field2Ids, 0, 0)
 			sids = field1Ids
+			objectPrimaryFieldName = objectFieldName2
+			objectSecondaryFieldName = objectFieldName1
 			dbFieldName = databaseFieldName2
 		}
 
@@ -106,7 +113,7 @@ func setupDualPrimaryKeyModelController[T any](
 		count := int64(0)
 
 		err := db.Transaction(func(tx *gorm.DB) error {
-			if err := tx.Model(new(T)).Delete(dbFieldName+" = ?", pid).Error; err != nil {
+			if err := tx.Delete(new(T), dbFieldName+" = ?", pid).Error; err != nil {
 				return err
 			}
 
@@ -120,10 +127,10 @@ func setupDualPrimaryKeyModelController[T any](
 
 				reflected := reflect.ValueOf(record).Elem()
 
-				primaryField := reflected.FieldByName(fieldName1)
+				primaryField := reflected.FieldByName(objectPrimaryFieldName)
 				primaryField.SetUint(uint64(pid))
 
-				secondaryField := reflected.FieldByName(fieldName2)
+				secondaryField := reflected.FieldByName(objectSecondaryFieldName)
 				secondaryField.SetUint(uint64(sid))
 
 				items[i] = record

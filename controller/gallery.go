@@ -56,7 +56,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 }
 
 func SetupGalleryItemController(group *gin.RouterGroup, db *gorm.DB) error {
-	return setupDualPrimaryKeyModelController[model.GalleryItem](
+	return SetupDualPrimaryKeyModelController[model.GalleryItem](
 		group, db,
 		"GalleryID", "ItemID",
 		"galleryId", "itemId",

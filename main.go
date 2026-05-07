@@ -53,7 +53,7 @@ func main() {
 	}
 
 	go func() {
-		err := enginClient.Run(env.BindClientAddr)
+		err := enginClient.Run(env.ClientBindAddr)
 		if err != nil {
 			l.Error().Fatalf("failed to start client server: %v", err)
 		}
@@ -88,7 +88,7 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		context.Redirect(http.StatusMovedPermanently, "/ui/")
 	})
 	engine.GET("/favicon.ico", func(context *gin.Context) {
-		context.Data(http.StatusOK, asset.FaviconMIME, asset.Favicon)
+		context.Data(http.StatusOK, asset.MIME, asset.Favicon)
 	})
 
 	apiGrp := engine.Group("/api")
