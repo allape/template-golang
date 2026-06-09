@@ -29,7 +29,7 @@ import TagCrudyButton from "../../component/TagCrudyButton";
 import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
 import { IItem, IItemSearchParams } from "../../model/item.ts";
 import { ITag, ITagSearchParams } from "../../model/tag.ts";
-import styles from './style.module.scss';
+import styles from "./style.module.scss";
 
 type IRecord = IGallery;
 type ISearchParams = IGallerySearchParams;
@@ -52,7 +52,7 @@ export default function Gallery(): ReactElement {
 
   const [searchParams, setSearchParams] = useState<ISearchParams>(() => ({
     ...BaseSearchParams,
-    orderByDefault: "1",
+    sortByPriorityThenUpdatedAt: true,
   }));
 
   const columns = useMemo<TableColumnsType<IRecord>>(
@@ -78,13 +78,6 @@ export default function Gallery(): ReactElement {
       {
         title: t("gallery.name"),
         dataIndex: "name",
-        filtered: !!searchParams["like_name"],
-        ...searchable(t("gallery.name"), (value) =>
-          setSearchParams((old) => ({
-            ...old,
-            like_name: value,
-          })),
-        ),
       },
       {
         title: t("gallery.createdBy"),
@@ -167,9 +160,10 @@ export default function Gallery(): ReactElement {
 
   return (
     <>
-      <CrudyTable<IRecord>
+      <CrudyTable<IRecord, ISearchParams>
         name={t("gallery._")}
         title={t("gallery._")}
+        titleSearchField="like_name"
         crudy={GalleryCrudy}
         columns={columns}
         searchParams={searchParams}

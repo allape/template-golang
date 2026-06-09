@@ -6,7 +6,6 @@ import {
   EEEvent,
   Ellipsis,
   ICrudyButtonProps,
-  searchable,
   Uploader,
 } from "@allape/gocrud-react";
 import NewCrudyButtonEventEmitter from "@allape/gocrud-react/src/component/CrudyButton/eventemitter.ts";
@@ -27,20 +26,16 @@ import { useTranslation } from "react-i18next";
 import {
   addItemToGalleries,
   GalleryCrudy,
-  GalleryItemCrudy,
+  getGalleryItemsByItemIds,
 } from "../../api/gallery.ts";
-import { addTagsToItem, ItemCrudy, ItemTagCrudy } from "../../api/item.ts";
+import {
+  addTagsToItem,
+  getItemTagsByItemIds,
+  ItemCrudy,
+} from "../../api/item.ts";
 import { TagCrudy } from "../../api/tag.ts";
-import {
-  IGallery,
-  IGalleryItemSearchParams,
-  IGallerySearchParams,
-} from "../../model/gallery.ts";
-import {
-  IItem,
-  IItemSearchParams,
-  IItemTagSearchParams,
-} from "../../model/item.ts";
+import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
+import { IItem, IItemSearchParams } from "../../model/item.ts";
 import { ITag, ITagSearchParams } from "../../model/tag.ts";
 import GallerySelector from "../GallerySelector";
 import TagSelector from "../TagSelector";
@@ -72,7 +67,7 @@ export default function ItemCrudyButton({
   const { t } = useTranslation();
   const { message } = App.useApp();
 
-  const [searchParams, setSearchParams] = useState<ISearchParams>(() => ({
+  const [searchParams] = useState<ISearchParams>(() => ({
     ...BaseSearchParams,
   }));
 
@@ -102,13 +97,6 @@ export default function ItemCrudyButton({
         title: t("item.name"),
         dataIndex: "name",
         render: (v) => v || "---",
-        filtered: !!searchParams["like_name"],
-        ...searchable(t("item.name"), (value) =>
-          setSearchParams((old) => ({
-            ...old,
-            like_name: value,
-          })),
-        ),
       },
       {
         title: t("item.tags"),
@@ -150,7 +138,7 @@ export default function ItemCrudyButton({
         render: asDefaultPattern,
       },
     ],
-    [searchParams, t],
+    [t],
   );
 
   const handleAfterListed = useCallback(
@@ -165,9 +153,7 @@ export default function ItemCrudyButton({
 
       const itemIds = Array.from(new Set(records.map((r) => r.id)));
 
-      const itemTags = await ItemTagCrudy.all<IItemTagSearchParams>({
-        in_itemId: itemIds,
-      });
+      const itemTags = await getItemTagsByItemIds(itemIds);
       const tagIds = Array.from(new Set(itemTags.map((i) => i.tagId)));
       const tags =
         tagIds.length > 0
@@ -176,11 +162,7 @@ export default function ItemCrudyButton({
             })
           : [];
 
-      const galleryItems = await GalleryItemCrudy.all<IGalleryItemSearchParams>(
-        {
-          in_itemId: itemIds,
-        },
-      );
+      const galleryItems = await getGalleryItemsByItemIds(itemIds);
       const galleryIds = Array.from(
         new Set(galleryItems.map((i) => i.galleryId)),
       );
@@ -265,8 +247,9 @@ export default function ItemCrudyButton({
   }, [emitter]);
 
   return (
-    <CrudyButton
+    <CrudyButton<IRecord, ISearchParams>
       name={t("item._")}
+      titleSearchField="like_name"
       columns={columns}
       crudy={ItemCrudy}
       searchParams={searchParams}

@@ -28,6 +28,7 @@ export default function TagCrudyButton(
 
   const [searchParams, setSearchParams] = useState<ISearchParams>(() => ({
     ...BaseSearchParams,
+    sortByPriorityThenUpdatedAt: true,
   }));
 
   const columns = useMemo<TableColumnsType<IRecord>>(
@@ -45,13 +46,6 @@ export default function TagCrudyButton(
         title: t("tag.name"),
         dataIndex: "name",
         render: (v, record) => <Tag color={record.color}>{v}</Tag>,
-        filtered: !!searchParams["like_name"],
-        ...searchable(t("tag.name"), (value) =>
-          setSearchParams((old) => ({
-            ...old,
-            like_name: value,
-          })),
-        ),
       },
       {
         title: t("tag.alias"),
@@ -85,8 +79,9 @@ export default function TagCrudyButton(
   );
 
   return (
-    <CrudyButton
+    <CrudyButton<IRecord, ISearchParams>
       name={t("tag._")}
+      titleSearchField="like_name"
       columns={columns}
       crudy={TagCrudy}
       searchParams={searchParams}

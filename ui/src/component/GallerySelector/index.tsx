@@ -8,9 +8,7 @@ import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
 type IRecord = IGallery;
 type ISearchParams = IGallerySearchParams;
 
-export type IGallerySelectorProps = Partial<
-  ICrudySelectorProps<IRecord>
->;
+export type IGallerySelectorProps = Partial<ICrudySelectorProps<IRecord>>;
 
 export default function GallerySelector(
   props: PropsWithChildren<IGallerySelectorProps>,
@@ -20,7 +18,7 @@ export default function GallerySelector(
   const sp = useMemo<ISearchParams>(
     () => ({
       ...BaseSearchParams,
-      orderByDefault: "1",
+      sortByPriorityThenUpdatedAt: true,
     }),
     [],
   );

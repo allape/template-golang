@@ -1,21 +1,28 @@
-import Crudy, { config, get } from "@allape/gocrud-react";
+import Crudy, { antdget, config } from "@allape/gocrud-react";
 import { IItem, IItemTag } from "../model/item.ts";
 import { ITag } from "../model/tag.ts";
 
 export const ItemCrudy = new Crudy<IItem>(`${config.SERVER_URL}/item`);
 
-export const ItemTagCrudy = new Crudy<IItemTag>(
-  `${config.SERVER_URL}/item-tag`,
-);
+export function getItemTagsByItemIds(
+  itemIds: IItem["id"][],
+): Promise<IItemTag[]> {
+  return antdget<IItemTag[]>(
+    `${config.SERVER_URL}/item-tag/all?in_itemId=${itemIds.join(",")}`,
+  );
+}
 
 export function addTagsToItem(
-  tags: ITag["id"][],
+  tagIds: ITag["id"][],
   itemId: IItem["id"],
 ): Promise<IItemTag[]> {
-  return get(
-    `${config.SERVER_URL}/item-tag/save/itemId?itemId=${itemId}&tagId=${encodeURIComponent(tags.join(","))}`,
-    {
-      method: "POST",
-    },
-  );
+  return antdget(`${config.SERVER_URL}/item-tag/save/itemId/${itemId}`, {
+    method: "POST",
+    body: JSON.stringify(
+      tagIds.map<Pick<IItemTag, "itemId" | "tagId">>((id) => ({
+        itemId,
+        tagId: id,
+      })),
+    ),
+  });
 }
