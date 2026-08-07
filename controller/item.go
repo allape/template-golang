@@ -51,7 +51,7 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 
 func SetupItemTagController(group *gin.RouterGroup, db *gorm.DB) error {
 	return gocrud.SetupM2MConnectorController[model.ItemTag](
-		group, db, galleryL.New("tag"),
+		group, db, itemL.New("tag"),
 		"ItemID", "TagID",
 		nil,
 	)
