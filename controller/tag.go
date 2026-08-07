@@ -20,7 +20,7 @@ func SetupTagController(group *gin.RouterGroup, db *gorm.DB) error {
 			"like_keyword": func(db *gorm.DB, values []string, _ *gin.Context) (*gorm.DB, error) {
 				if value, ok := gocrud.PickFirstValuableString(values); ok {
 					v := "%" + value + "%"
-					return db.Where("(name LIKE ? OR alias LIKE ?)", v, v), nil
+					return db.Where("(`name` LIKE ? OR `alias` LIKE ?)", v, v), nil
 				}
 				return db, nil
 			},

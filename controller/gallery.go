@@ -44,9 +44,17 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 }
 
 func SetupGalleryItemController(group *gin.RouterGroup, db *gorm.DB) error {
-	return gocrud.SetupDualPrimaryKeyModelController[model.GalleryItem](
+	return gocrud.SetupM2MConnectorController[model.GalleryItem](
 		group, db, galleryL.New("item"),
 		"GalleryID", "ItemID",
-		"gallery_id", "item_id",
+		nil,
+	)
+}
+
+func SetupGalleryTagController(group *gin.RouterGroup, db *gorm.DB) error {
+	return gocrud.SetupM2MConnectorController[model.GalleryTag](
+		group, db, galleryL.New("tag"),
+		"GalleryID", "TagID",
+		nil,
 	)
 }

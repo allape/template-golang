@@ -6,9 +6,9 @@ import {
   EEEvent,
   Ellipsis,
   ICrudyButtonProps,
+  NewCrudyButtonEventEmitter,
   Uploader,
 } from "@allape/gocrud-react";
-import NewCrudyButtonEventEmitter from "@allape/gocrud-react/src/component/CrudyButton/eventemitter.ts";
 import {
   App,
   Avatar,
@@ -23,20 +23,11 @@ import {
 } from "antd";
 import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  addItemToGalleries,
-  GalleryCrudy,
-  getGalleryItemsByItemIds,
-} from "../../api/gallery.ts";
-import {
-  addTagsToItem,
-  getItemTagsByItemIds,
-  ItemCrudy,
-} from "../../api/item.ts";
-import { TagCrudy } from "../../api/tag.ts";
-import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
+import { GalleryItemHandler } from "../../api/gallery.ts";
+import { ItemCrudy, ItemTagHandler } from "../../api/item.ts";
+import { IGallery } from "../../model/gallery.ts";
 import { IItem, IItemSearchParams } from "../../model/item.ts";
-import { ITag, ITagSearchParams } from "../../model/tag.ts";
+import { ITag } from "../../model/tag.ts";
 import GallerySelector from "../GallerySelector";
 import TagSelector from "../TagSelector";
 
@@ -151,40 +142,29 @@ export default function ItemCrudyButton({
         r._src = `${config.SERVER_STATIC_URL}${r.src}`;
       });
 
-      const itemIds = Array.from(new Set(records.map((r) => r.id)));
+      const itemIds = records.map((r) => r.id);
 
-      const itemTags = await getItemTagsByItemIds(itemIds);
-      const tagIds = Array.from(new Set(itemTags.map((i) => i.tagId)));
-      const tags =
-        tagIds.length > 0
-          ? await TagCrudy.all<ITagSearchParams>({
-              in_id: tagIds,
-            })
-          : [];
+      const itemTags = await ItemTagHandler.get<ITag>("itemId", itemIds);
+      Object.entries(itemTags).forEach(([itemId, tags]) => {
+        const found = records.find((r) => `${r.id}` === itemId);
+        if (!found) {
+          return;
+        }
+        found._tags = tags;
+        found._tagIds = tags.map((t) => t.id);
+      });
 
-      const galleryItems = await getGalleryItemsByItemIds(itemIds);
-      const galleryIds = Array.from(
-        new Set(galleryItems.map((i) => i.galleryId)),
+      const itemGalleries = await GalleryItemHandler.get<IGallery>(
+        "itemId",
+        itemIds,
       );
-      const galleries =
-        galleryIds.length > 0
-          ? await GalleryCrudy.all<IGallerySearchParams>({
-              in_id: galleryIds,
-            })
-          : [];
-
-      records.forEach((i) => {
-        const its = itemTags.filter((it) => it.itemId === i.id);
-        i._tagIds = its.map((it) => it.tagId);
-        i._tags = its
-          .map((it) => tags.find((t) => t.id === it.tagId))
-          .filter(Boolean) as ITag[];
-
-        const gis = galleryItems.filter((gi) => gi.itemId === i.id);
-        i._galleryIds = gis.map((gi) => gi.galleryId);
-        i._galleries = gis
-          .map((gi) => galleries.find((g) => g.id === gi.galleryId))
-          .filter(Boolean) as IGallery[];
+      Object.entries(itemGalleries).forEach(([itemId, galleries]) => {
+        const found = records.find((r) => `${r.id}` === itemId);
+        if (!found) {
+          return;
+        }
+        found._galleries = galleries;
+        found._galleryIds = galleries.map((g) => g.id);
       });
 
       return records;
@@ -204,12 +184,26 @@ export default function ItemCrudyButton({
       const galleryIds: number[] | undefined =
         form.getFieldValue("_galleryIds");
       if (galleryIds && galleryIds.length > 0) {
-        await addItemToGalleries(record.id, galleryIds);
+        await GalleryItemHandler.saveAfterDelete(
+          "itemId",
+          record.id,
+          galleryIds.map((gi) => ({
+            galleryId: gi,
+            itemId: record.id,
+          })),
+        );
       }
 
       const tagIds: ITag["id"][] | undefined = form.getFieldValue("_tagIds");
       if (tagIds && tagIds.length > 0) {
-        await addTagsToItem(tagIds, record.id);
+        await ItemTagHandler.saveAfterDelete(
+          "itemId",
+          record.id,
+          tagIds.map((ti) => ({
+            itemId: record.id,
+            tagId: ti,
+          })),
+        );
       }
 
       const shouldStop: boolean = form.getFieldValue("_continuesUpload");
@@ -221,7 +215,7 @@ export default function ItemCrudyButton({
       });
 
       if (shouldStop) {
-        message.success(t("item.saved"));
+        message.success(t("item.saved")).then();
         return false;
       }
       return true;

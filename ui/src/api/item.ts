@@ -1,28 +1,12 @@
-import Crudy, { antdget, config } from "@allape/gocrud-react";
+import Crudy, { AntdM2MConnectorHandler, config } from "@allape/gocrud-react";
 import { IItem, IItemTag } from "../model/item.ts";
 import { ITag } from "../model/tag.ts";
+import { TagCrudy } from "./tag.ts";
 
 export const ItemCrudy = new Crudy<IItem>(`${config.SERVER_URL}/item`);
 
-export function getItemTagsByItemIds(
-  itemIds: IItem["id"][],
-): Promise<IItemTag[]> {
-  return antdget<IItemTag[]>(
-    `${config.SERVER_URL}/item-tag/all?in_itemId=${itemIds.join(",")}`,
-  );
-}
-
-export function addTagsToItem(
-  tagIds: ITag["id"][],
-  itemId: IItem["id"],
-): Promise<IItemTag[]> {
-  return antdget(`${config.SERVER_URL}/item-tag/save/itemId/${itemId}`, {
-    method: "POST",
-    body: JSON.stringify(
-      tagIds.map<Pick<IItemTag, "itemId" | "tagId">>((id) => ({
-        itemId,
-        tagId: id,
-      })),
-    ),
-  });
-}
+export const ItemTagHandler = new AntdM2MConnectorHandler<
+  IItem,
+  ITag,
+  IItemTag
+>(`${config.SERVER_URL}/item-tag`, ItemCrudy, TagCrudy, "tagId", "itemId");

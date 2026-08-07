@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"os"
 	"path"
 	"slices"
 
@@ -18,10 +19,11 @@ import (
 var galleryl = gogger.New("client:controller:gallery")
 
 type GalleryDetailPayload struct {
-	Gallery  model.Gallery   `json:"gallery"`
-	Items    []model.Item    `json:"items"`
-	ItemTags []model.ItemTag `json:"itemTags"`
-	Tags     []model.Tag     `json:"tags"`
+	Gallery     model.Gallery      `json:"gallery"`
+	GalleryTags []model.GalleryTag `json:"galleryTags"`
+	Items       []model.Item       `json:"items"`
+	ItemTags    []model.ItemTag    `json:"itemTags"`
+	Tags        []model.Tag        `json:"tags"`
 }
 
 func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
@@ -71,7 +73,6 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.FromStatus(http.StatusForbidden), http.StatusText(http.StatusForbidden))
 			return
 		}
-
 		payload.Gallery = gallery
 
 		var items []model.Item
@@ -83,54 +84,59 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find items [error]")
 			return
 		}
-
 		payload.Items = items
 
-		if len(items) == 0 {
-			gocrud.MakeOkayDataResponse(context, payload)
-			return
-		}
-
-		var itemIds = make([]gocrud.ID, len(items))
-		for i, item := range items {
-			itemIds[i] = item.ID
-		}
-
 		var itemTags []model.ItemTag
-		if err := db.Model(&model.ItemTag{}).Where("`item_id` IN ?", itemIds).Find(&itemTags).Error; err != nil {
-			galleryl.Error().Printf("failed to get item tags by gallery id %d: %v", galleryId, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find item tags [error]")
-			return
+		if len(items) > 0 {
+			var itemIds = make([]gocrud.ID, len(items))
+			for i, item := range items {
+				itemIds[i] = item.ID
+			}
+
+			if err := db.Model(&model.ItemTag{}).Where("`item_id` IN ?", itemIds).Find(&itemTags).Error; err != nil {
+				galleryl.Error().Printf("failed to get item tags by gallery id %d: %v", galleryId, err)
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find item tags [error]")
+				return
+			}
+			payload.ItemTags = itemTags
 		}
 
-		payload.ItemTags = itemTags
-
-		if len(itemTags) == 0 {
-			gocrud.MakeOkayDataResponse(context, payload)
+		var galleryTags []model.GalleryTag
+		if err := db.Model(&model.GalleryTag{}).Where("`gallery_id` = ?", galleryId).Find(&galleryTags).Error; err != nil {
+			galleryl.Error().Printf("failed to get gallery tags by gallery id %d: %v", galleryId, err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find gallery tags [error]")
 			return
 		}
+		payload.GalleryTags = galleryTags
 
-		var tagIds = make([]gocrud.ID, 0, len(itemTags))
+		var tagIds = make([]gocrud.ID, 0, len(itemTags)+len(galleryTags))
 		for _, tag := range itemTags {
 			if slices.Contains(tagIds, tag.TagID) {
 				continue
 			}
 			tagIds = append(tagIds, tag.TagID)
 		}
-
-		var tags []model.Tag
-		if err := db.Model(&model.Tag{}).Where("`id` IN ?", tagIds).Find(&tags).Error; err != nil {
-			galleryl.Error().Printf("failed to get tags by gallery id %d: %v", galleryId, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find tags [error]")
-			return
+		for _, tag := range galleryTags {
+			if slices.Contains(tagIds, tag.TagID) {
+				continue
+			}
+			tagIds = append(tagIds, tag.TagID)
 		}
 
-		payload.Tags = tags
+		if len(tagIds) > 0 {
+			var tags []model.Tag
+			if err := db.Model(&model.Tag{}).Where("`id` IN ?", tagIds).Find(&tags).Error; err != nil {
+				galleryl.Error().Printf("failed to get tags by gallery id %d: %v", galleryId, err)
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find tags [error]")
+				return
+			}
+			payload.Tags = tags
+		}
 
 		gocrud.MakeOkayDataResponse(context, payload)
 	})
 
-	// :itemId can be empty for retrieving the first image of the gallery of :galleryId
+	// retrieving the first image of the gallery of :galleryId when :itemId is 0
 	group.GET("/image/:galleryId/:itemId", func(context *gin.Context) {
 		user, ok := gophorward.GinGetUser(context)
 		if !ok {
@@ -174,7 +180,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 				return itemId == 0
 			},
 			func() error {
-				return db.Model(&galleryItem).Where("`gallery_id` = ?", galleryId).Order("`created_at` ASC").First(&galleryItem).Error
+				return db.Model(&galleryItem).Where("`gallery_id` = ?", galleryId).Order("`priority` ASC, `updated_at` DESC").First(&galleryItem).Error
 			},
 			func() error {
 				return db.Model(&galleryItem).Where("`gallery_id` = ? AND `item_id` = ?", galleryId, itemId).First(&galleryItem).Error
@@ -204,7 +210,28 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			return
 		}
 
-		context.File(path.Join(env.StaticFolder, item.Src))
+		file, err := os.Open(path.Join(env.StaticFolder, item.Src))
+		if err != nil {
+			galleryl.Error().Printf("failed to open gallery item file by gallery id %d and item id %d: %v", galleryId, itemId, err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to open gallery item file [error]")
+			return
+		}
+
+		var fileObject model.FileObject
+		if err := db.Model(&fileObject).Where("`filename` = ?", item.Src).First(&fileObject).Error; err != nil {
+			galleryl.Error().Printf("failed to get file object by item id %d: %v", galleryItem.ItemID, err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find file object [error]")
+			return
+		}
+
+		serveFunc, err := gocrud.NewDareHttpServeFunc(file, fileObject.HttpFileSystemObjectBase.ToHttpFile())
+		if err != nil {
+			galleryl.Error().Printf("failed to decrypt file object by item id %d: %v", galleryItem.ItemID, err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to decrypt file object [error]")
+			return
+		}
+
+		serveFunc(context.Writer, context.Request)
 	})
 
 	return nil

@@ -22,3 +22,9 @@ type GalleryItem struct {
 	ItemID    gocrud.ID `json:"itemId" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime;<-:create"`
 }
+
+type GalleryTag struct {
+	GalleryID gocrud.ID `json:"galleryId" gorm:"primaryKey"`
+	TagID     gocrud.ID `json:"tagId" gorm:"primaryKey"`
+	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime;<-:create"`
+}

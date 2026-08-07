@@ -78,11 +78,10 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup single html serve: %v", err)
 	}
 
-	err = gocrud.NewHttpFileSystem(engine.Group("/static"), env.StaticFolder, &gocrud.HttpFileSystemConfig{
-		AllowOverwrite: false,
-		AllowUpload:    true,
-		EnableDigest:   true,
-	})
+	err = controller.SetupFileObjectController(engine.Group("/static"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup file object controller: %v", err)
+	}
 
 	engine.GET("/", func(context *gin.Context) {
 		context.Redirect(http.StatusMovedPermanently, "/ui/")
@@ -116,6 +115,11 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 	err = controller.SetupGalleryItemController(apiGrp.Group("/gallery-item"), db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup gallery item controller: %v", err)
+	}
+
+	err = controller.SetupGalleryTagController(apiGrp.Group("/gallery-tag"), db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to setup gallery tag controller: %v", err)
 	}
 
 	return engine, nil
@@ -152,6 +156,7 @@ func SetupDatabase() (*gorm.DB, error) {
 		&model.ItemTag{},
 		&model.Gallery{},
 		&model.GalleryItem{},
+		&model.GalleryTag{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate models: %v", err)

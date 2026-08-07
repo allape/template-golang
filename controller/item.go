@@ -14,6 +14,7 @@ var itemL = l.New("item")
 
 func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 	err := gocrud.Setup(group, db, itemL.New("crud"), &gocrud.Crud[model.Item]{
+		EnableGetAll: true,
 		SearchHandlers: gocrud.BaseSearchHandlers(gocrud.SearchHandlers{
 			"like_name": gocrud.KeywordLike("name", nil),
 			"createBy":  gocrud.KeywordEqual("created_by", nil),
@@ -23,7 +24,7 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 					if len(ids) == 0 {
 						return db, gocrud.NotArrayError
 					}
-					return db.Where("id IN (SELECT gi.item_id FROM gallery_items gi WHERE gi.gallery_id IN ?)", ids), nil
+					return db.Where("`id` IN (SELECT gi.item_id FROM gallery_items gi WHERE gi.gallery_id IN ?)", ids), nil
 				}
 				return db, nil
 			},
@@ -49,9 +50,9 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 }
 
 func SetupItemTagController(group *gin.RouterGroup, db *gorm.DB) error {
-	return gocrud.SetupDualPrimaryKeyModelController[model.ItemTag](
-		group, db, itemL.New("tag"),
+	return gocrud.SetupM2MConnectorController[model.ItemTag](
+		group, db, galleryL.New("tag"),
 		"ItemID", "TagID",
-		"item_id", "tag_id",
+		nil,
 	)
 }

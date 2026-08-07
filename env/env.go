@@ -11,9 +11,10 @@ const (
 
 	databaseDSN = Project + "DATABASE_DSN"
 
-	bindAddr     = Project + "BIND_ADDR"
-	uiFolder     = Project + "UI_FOLDER"
-	staticFolder = Project + "STATIC_FOLDER"
+	bindAddr            = Project + "BIND_ADDR"
+	uiFolder            = Project + "UI_FOLDER"
+	staticFolder        = Project + "STATIC_FOLDER"
+	staticFileMasterKey = Project + "STATIC_FILE_MASTER_KEY"
 
 	clientBindAddr      = Project + "CLIENT_BIND_ADDR"
 	clientUIFolder      = Project + "CLIENT_UI_FOLDER"
@@ -27,9 +28,10 @@ var (
 
 	DatabaseDSN = goenv.Getenv(databaseDSN, "root:Root_123456@tcp(127.0.0.1:3306)/projectname?charset=utf8mb4&parseTime=True&loc=Local")
 
-	BindAddr     = goenv.Getenv(bindAddr, ":8080")
-	UIFolder     = goenv.Getenv(uiFolder, "./ui/dist/index.html")
-	StaticFolder = goenv.Getenv(staticFolder, "./static")
+	BindAddr            = goenv.Getenv(bindAddr, ":8080")
+	UIFolder            = goenv.Getenv(uiFolder, "./ui/dist/index.html")
+	StaticFolder        = goenv.Getenv(staticFolder, "./static")
+	StaticFileMasterKey = goenv.Getenv(staticFileMasterKey, "78bZJ8hSCWkz8mcPRfLh")
 
 	ClientBindAddr      = goenv.Getenv(clientBindAddr, ":8888")
 	ClientUIFolder      = goenv.Getenv(clientUIFolder, "./client/ui/dist/index.html")

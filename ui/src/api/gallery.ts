@@ -1,28 +1,32 @@
-import Crudy, { antdget, config } from "@allape/gocrud-react";
-import { IGallery, IGalleryItem } from "../model/gallery.ts";
+import Crudy, { AntdM2MConnectorHandler, config } from "@allape/gocrud-react";
+import { IGallery, IGalleryItem, IGalleryTag } from "../model/gallery.ts";
 import { IItem } from "../model/item.ts";
+import { ITag } from "../model/tag.ts";
+import { ItemCrudy } from "./item.ts";
+import { TagCrudy } from "./tag.ts";
 
 export const GalleryCrudy = new Crudy<IGallery>(`${config.SERVER_URL}/gallery`);
 
-export function getGalleryItemsByItemIds(
-  itemIds: IItem["id"][],
-): Promise<IGalleryItem[]> {
-  return antdget<IGalleryItem[]>(
-    `${config.SERVER_URL}/gallery-item/all?in_itemId=${itemIds.join(",")}`,
-  );
-}
+export const GalleryItemHandler = new AntdM2MConnectorHandler<
+  IGallery,
+  IItem,
+  IGalleryItem
+>(
+  `${config.SERVER_URL}/gallery-item`,
+  GalleryCrudy,
+  ItemCrudy,
+  "galleryId",
+  "itemId",
+);
 
-export function addItemToGalleries(
-  itemId: IItem["id"],
-  galleryIds: IGallery["id"][],
-): Promise<number> {
-  return antdget(`${config.SERVER_URL}/gallery-item/save/itemId/${itemId}`, {
-    method: "POST",
-    body: JSON.stringify(
-      galleryIds.map<Pick<IGalleryItem, "itemId" | "galleryId">>((id) => ({
-        itemId,
-        galleryId: id,
-      })),
-    ),
-  });
-}
+export const GalleryTagHandler = new AntdM2MConnectorHandler<
+  IGallery,
+  ITag,
+  IGalleryTag
+>(
+  `${config.SERVER_URL}/gallery-tag`,
+  GalleryCrudy,
+  TagCrudy,
+  "galleryId",
+  "tagId",
+);

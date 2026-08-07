@@ -3,9 +3,9 @@ import {
   asDefaultPattern,
   CrudyTable,
   Ellipsis,
+  NewCrudyButtonEventEmitter,
   searchable,
 } from "@allape/gocrud-react";
-import NewCrudyButtonEventEmitter from "@allape/gocrud-react/src/component/CrudyButton/eventemitter.ts";
 import { Size } from "@allape/gocrud-react/src/hook/useMobile.ts";
 import { UseLoadingReturn } from "@allape/use-loading/lib/hook/useLoading";
 import { CameraOutlined, MoreOutlined } from "@ant-design/icons";
@@ -14,6 +14,7 @@ import {
   Divider,
   Dropdown,
   Form,
+  FormInstance,
   Input,
   InputNumber,
   MenuProps,
@@ -23,15 +24,21 @@ import {
 } from "antd";
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { GalleryCrudy } from "../../api/gallery.ts";
+import { GalleryCrudy, GalleryTagHandler } from "../../api/gallery.ts";
 import ItemCrudyButton from "../../component/ItemCrudyButton";
 import TagCrudyButton from "../../component/TagCrudyButton";
+import TagSelector from "../../component/TagSelector";
 import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
 import { IItem, IItemSearchParams } from "../../model/item.ts";
 import { ITag, ITagSearchParams } from "../../model/tag.ts";
 import styles from "./style.module.scss";
 
-type IRecord = IGallery;
+interface IGalleryModified extends IGallery {
+  _tags?: ITag[];
+  _tagIds?: ITag["id"][];
+}
+
+type IRecord = IGalleryModified;
 type ISearchParams = IGallerySearchParams;
 
 const DefaultFormValue: Partial<IRecord> = {
@@ -60,6 +67,16 @@ export default function Gallery(): ReactElement {
       {
         title: t("id"),
         dataIndex: "id",
+      },
+      {
+        title: t("gallery.tags"),
+        dataIndex: "_tags",
+        render: (tags?: ITag[]) =>
+          tags?.map((tag) => (
+            <div key={tag.id} style={{ marginBottom: "5px" }}>
+              <Tag color={tag.color}>{tag.name}</Tag>
+            </div>
+          )) || "---",
       },
       {
         title: t("gallery.priority"),
@@ -158,6 +175,46 @@ export default function Gallery(): ReactElement {
     [emitter, t],
   );
 
+  const handleAfterListed = useCallback(
+    async (records: IRecord[]): Promise<IRecord[]> => {
+      const galleryTags = await GalleryTagHandler.get<ITag>(
+        "galleryId",
+        records.map((r) => r.id),
+      );
+      Object.entries(galleryTags).forEach(([galleryId, tags]) => {
+        const found = records.find((r) => `${r.id}` === galleryId);
+        if (!found) {
+          return;
+        }
+        found._tags = tags;
+        found._tagIds = tags.map((t) => t.id);
+      });
+      return records;
+    },
+    [],
+  );
+
+  const handleBeforeSave = useCallback((record: IRecord) => {
+    delete record._tagIds;
+  }, []);
+
+  const handleAfterSaved = useCallback(
+    async (record: IRecord, form: FormInstance<IRecord>) => {
+      const tagIds: ITag["id"][] | undefined = form.getFieldValue("_tagIds");
+      if (tagIds && tagIds.length > 0) {
+        await GalleryTagHandler.saveAfterDelete(
+          "galleryId",
+          record.id,
+          tagIds.map((ti) => ({
+            galleryId: record.id,
+            tagId: ti,
+          })),
+        );
+      }
+    },
+    [],
+  );
+
   return (
     <>
       <CrudyTable<IRecord, ISearchParams>
@@ -169,6 +226,9 @@ export default function Gallery(): ReactElement {
         searchParams={searchParams}
         defaultFormValue={DefaultFormValue}
         actions={handleActions}
+        afterListed={handleAfterListed}
+        beforeSave={handleBeforeSave}
+        afterSaved={handleAfterSaved}
         titleExtra={
           <>
             <Divider type="vertical" />
@@ -184,6 +244,10 @@ export default function Gallery(): ReactElement {
           </>
         }
       >
+        <Form.Item name="_tagIds" label={t("gallery.tags")}>
+          <TagSelector mode="multiple" />
+        </Form.Item>
+
         <Form.Item name="isPublic" label={t("gallery.isPublic")}>
           <Switch
             checkedChildren={t("gallery.isPublicYesOrNo.yes")}

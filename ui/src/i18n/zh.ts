@@ -35,6 +35,7 @@ const Translation = {}; /*: typeof en = {
 
   gallery: {
     _: "Gallery",
+    tags: "Tags",
     isPublic: "Is Public",
     name: "Name",
     createdBy: "Created By",

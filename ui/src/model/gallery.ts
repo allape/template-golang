@@ -1,6 +1,6 @@
 import { IBase, IBaseSearchParams } from "@allape/gocrud";
-import { ITimeSortSearchParams } from "@allape/gocrud/src/model.ts";
 import { IItem } from "./item.ts";
+import { ITag } from "./tag.ts";
 
 export interface IGallery extends IBase {
   name: string;
@@ -9,19 +9,18 @@ export interface IGallery extends IBase {
   createdBy: string;
 }
 
-export interface IGallerySearchParams
-  extends IBaseSearchParams, ITimeSortSearchParams {
+export interface IGallerySearchParams extends IBaseSearchParams {
   like_name?: string;
   isPublic?: boolean;
   createdBy?: string;
 }
 
 export interface IGalleryItem extends Pick<IBase, "createdAt"> {
-  itemId: IItem["id"];
   galleryId: IGallery["id"];
+  itemId: IItem["id"];
 }
 
-export interface IGalleryItemSearchParams {
-  in_galleryId?: IGalleryItem["galleryId"][];
-  in_itemId?: IGalleryItem["itemId"][];
+export interface IGalleryTag extends Pick<IBase, "createdAt"> {
+  galleryId: IGallery["id"];
+  tagId: ITag["id"];
 }
