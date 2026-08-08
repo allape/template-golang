@@ -6,6 +6,8 @@ github.com/allape/gocrud v0.0.0-20260807095138-7c091369e07d h1:2mpCsg1WxhXO/jdUh
 github.com/allape/gocrud v0.0.0-20260807095138-7c091369e07d/go.mod h1:WhPCNPxU81KN+Slma0ROTUG6Wb8a83UNuvfrEO7rv9U=
 github.com/allape/gocrud v0.0.0-20260807101720-2cd04117c561 h1:xWVZxVcFfiEouhBPoNwqjf+w2t/Ai3Qm66TP+kgy0WY=
 github.com/allape/gocrud v0.0.0-20260807101720-2cd04117c561/go.mod h1:WhPCNPxU81KN+Slma0ROTUG6Wb8a83UNuvfrEO7rv9U=
+github.com/allape/gocrud v0.0.0-20260808053441-6f4f9b6a804e h1:6JlbL6nTJnXQqaj+yzk6if3kbW86PUv2Sns4UTQPt80=
+github.com/allape/gocrud v0.0.0-20260808053441-6f4f9b6a804e/go.mod h1:WhPCNPxU81KN+Slma0ROTUG6Wb8a83UNuvfrEO7rv9U=
 github.com/allape/goenv v0.0.0-20241202051618-ce41afb81ebf h1:0TjoyW4DGTjGf1d+8N8tEty5FKWc79t/Vq0bA6ARrbQ=
 github.com/allape/goenv v0.0.0-20241202051618-ce41afb81ebf/go.mod h1:1E4rNqENwTNc+KMYgEndLygF3F6Uk8mREGrUPu3RiqU=
 github.com/allape/gogger v1.0.0 h1:KNfNRme+jiFwYQKvV4AQ0dYFCKYxpiS6u/oQW6bzkLs=

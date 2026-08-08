@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/allape/gocrud"
@@ -29,6 +30,14 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 				return db, nil
 			},
 		}),
+		WillGetAll: func(context *gin.Context, db *gorm.DB) *gorm.DB {
+			handledSearch := gocrud.GetHandledSearch(context)
+			if !slices.Contains(handledSearch, "in_id") {
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "in_id can NOT be empty for getting all")
+				return db
+			}
+			return db
+		},
 		WillSave: func(record *model.Item, context *gin.Context, db *gorm.DB) {
 			record.Name = strings.TrimSpace(record.Name)
 			if len(record.Name) > model.MaxItemNameLength {

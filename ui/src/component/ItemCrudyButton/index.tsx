@@ -142,30 +142,25 @@ export default function ItemCrudyButton({
         r._src = `${config.SERVER_STATIC_URL}${r.src}`;
       });
 
-      const itemIds = records.map((r) => r.id);
-
-      const itemTags = await ItemTagHandler.get<ITag>("itemId", itemIds);
-      Object.entries(itemTags).forEach(([itemId, tags]) => {
-        const found = records.find((r) => `${r.id}` === itemId);
-        if (!found) {
-          return;
-        }
-        found._tags = tags;
-        found._tagIds = tags.map((t) => t.id);
-      });
-
-      const itemGalleries = await GalleryItemHandler.get<IGallery>(
+      await ItemTagHandler.get<ITag, ModifiedItem>(
         "itemId",
-        itemIds,
+        records,
+        {},
+        (item, tags) => {
+          item._tags = tags;
+          item._tagIds = tags.map((t) => t.id);
+        },
       );
-      Object.entries(itemGalleries).forEach(([itemId, galleries]) => {
-        const found = records.find((r) => `${r.id}` === itemId);
-        if (!found) {
-          return;
-        }
-        found._galleries = galleries;
-        found._galleryIds = galleries.map((g) => g.id);
-      });
+
+      await GalleryItemHandler.get<IGallery, ModifiedItem>(
+        "itemId",
+        records,
+        {},
+        (item, galleries) => {
+          item._galleries = galleries;
+          item._galleryIds = galleries.map((g) => g.id);
+        },
+      );
 
       return records;
     },

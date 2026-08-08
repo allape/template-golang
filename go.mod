@@ -3,7 +3,7 @@ module github.com/allape/golang
 go 1.26.2
 
 require (
-	github.com/allape/gocrud v0.0.0-20260807101720-2cd04117c561
+	github.com/allape/gocrud v0.0.0-20260808053441-6f4f9b6a804e
 	github.com/allape/goenv v0.0.0-20241202051618-ce41afb81ebf
 	github.com/allape/gogger v1.0.0
 	github.com/allape/gophorward v0.0.0-20260707113056-adab5d625392

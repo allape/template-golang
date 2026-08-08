@@ -177,18 +177,15 @@ export default function Gallery(): ReactElement {
 
   const handleAfterListed = useCallback(
     async (records: IRecord[]): Promise<IRecord[]> => {
-      const galleryTags = await GalleryTagHandler.get<ITag>(
+      await GalleryTagHandler.get<ITag, IGalleryModified>(
         "galleryId",
-        records.map((r) => r.id),
+        records,
+        {},
+        (gallery, tags) => {
+          gallery._tags = tags;
+          gallery._tagIds = tags.map((t) => t.id);
+        },
       );
-      Object.entries(galleryTags).forEach(([galleryId, tags]) => {
-        const found = records.find((r) => `${r.id}` === galleryId);
-        if (!found) {
-          return;
-        }
-        found._tags = tags;
-        found._tagIds = tags.map((t) => t.id);
-      });
       return records;
     },
     [],
