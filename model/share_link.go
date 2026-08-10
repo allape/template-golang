@@ -6,19 +6,21 @@ import (
 	"github.com/allape/gocrud"
 )
 
-type AccessGroup struct {
+type ShareLink struct {
 	gocrud.Base
-	Name string `json:"name"`
+	NonceID     string `json:"nonceId" gorm:"index"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
-type AccessGroupGallery struct {
-	GroupID   gocrud.ID `json:"groupId" gorm:"primaryKey"`
+type ShareLinkGallery struct {
+	ShareID   gocrud.ID `json:"shareId" gorm:"primaryKey"`
 	GalleryID gocrud.ID `json:"galleryId" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime;<-:create"`
 }
 
-type AccessGroupUser struct {
-	GroupID   gocrud.ID `json:"groupId" gorm:"primaryKey"`
+type UserGallery struct {
 	UserID    gocrud.ID `json:"userId" gorm:"primaryKey"`
+	GalleryID gocrud.ID `json:"galleryId" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime;<-:create"`
 }

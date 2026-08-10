@@ -122,19 +122,19 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup gallery tag controller: %v", err)
 	}
 
-	err = controller.SetupAccessGroupController(apiGrp.Group("/access-group"), db)
+	err = controller.SetupShareLinkController(apiGrp.Group("/share-link"), db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup access group controller: %v", err)
+		return nil, fmt.Errorf("failed to setup share link controller: %v", err)
 	}
 
-	err = controller.SetupAccessGroupGalleryController(apiGrp.Group("/access-group-gallery"), db)
+	err = controller.SetupShareLinkGalleryController(apiGrp.Group("/share-link-gallery"), db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup access group gallery controller: %v", err)
+		return nil, fmt.Errorf("failed to setup share link gallery controller: %v", err)
 	}
 
-	err = controller.SetupAccessGroupUserController(apiGrp.Group("/access-group-user"), db)
+	err = controller.SetupUserGalleryController(apiGrp.Group("/user-gallery"), db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to setup access group user controller: %v", err)
+		return nil, fmt.Errorf("failed to setup user gallery controller: %v", err)
 	}
 
 	return engine, nil
@@ -172,9 +172,9 @@ func SetupDatabase() (*gorm.DB, error) {
 		&model.Gallery{},
 		&model.GalleryItem{},
 		&model.GalleryTag{},
-		&model.AccessGroup{},
-		&model.AccessGroupGallery{},
-		&model.AccessGroupUser{},
+		&model.ShareLink{},
+		&model.ShareLinkGallery{},
+		&model.UserGallery{},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate models: %v", err)

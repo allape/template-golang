@@ -8,6 +8,7 @@ require (
 	github.com/allape/gogger v1.0.0
 	github.com/allape/gophorward v0.0.0-20260707113056-adab5d625392
 	github.com/gin-gonic/gin v1.12.0
+	github.com/google/uuid v1.6.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.2
 )
