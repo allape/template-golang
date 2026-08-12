@@ -21,7 +21,6 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 	}
 
 	if env.ClientDebugMode {
-		// FIXME comment this when production
 		engine.Use(func(c *gin.Context) {
 			header := c.Request.Header
 			user, ok := gophorward.HttpHeaderGetUser(header)
@@ -38,7 +37,7 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		controller.Make401Response(context)
 	}))
 
-	err := gocrud.NewSingleHTMLServe(engine.Group("/ui"), env.UIFolder, &gocrud.SingleHTMLServeConfig{
+	err := gocrud.NewSingleHTMLServe(engine.Group("/ui"), env.ClientUIFolder, &gocrud.SingleHTMLServeConfig{
 		AllowReplace: false,
 	})
 	if err != nil {

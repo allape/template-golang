@@ -4,7 +4,7 @@ import (
 	"github.com/allape/goenv"
 )
 
-const Project = "projectname_"
+const Project = "PROJECTNAME_"
 
 const (
 	debugMode = Project + "DEBUG_MODE"
@@ -29,12 +29,12 @@ var (
 	DatabaseDSN = goenv.Getenv(databaseDSN, "root:Root_123456@tcp(127.0.0.1:3306)/projectname?charset=utf8mb4&parseTime=True&loc=Local")
 
 	BindAddr            = goenv.Getenv(bindAddr, ":8080")
-	UIFolder            = goenv.Getenv(uiFolder, "./ui/dist/index.html")
+	UIFolder            = goenv.Getenv(uiFolder, "./ui/admin/dist/index.html")
 	StaticFolder        = goenv.Getenv(staticFolder, "./static")
 	StaticFileMasterKey = goenv.Getenv(staticFileMasterKey, "78bZJ8hSCWkz8mcPRfLh")
 
 	ClientBindAddr      = goenv.Getenv(clientBindAddr, ":8888")
-	ClientUIFolder      = goenv.Getenv(clientUIFolder, "./client/ui/dist/index.html")
+	ClientUIFolder      = goenv.Getenv(clientUIFolder, "./ui/client/dist/index.html")
 	ClientDebugMode     = goenv.Getenv(clientDebugMode, false)
 	ClientDebugUserID   = goenv.Getenv(clientDebugUserID, "-1")
 	ClientDebugUserName = goenv.Getenv(clientDebugUserName, "allape")

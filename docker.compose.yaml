@@ -1,32 +1,32 @@
-name: golang
+name: projectname
 services:
   app:
-    image: allape/golang:latest
-    container_name: golang
+    image: allape/projectname:latest
     restart: unless-stopped
     environment:
-      GOLANG_DATABASE_DSN: "root:EfF74MD1l9t7TZ0VY3EF@tcp(database:3306)/golang?charset=utf8mb4&parseTime=True&loc=Local"
+      PROJECTNAME_DATABASE_DSN: "root:2mu4XX0HBmajg7hcbFFn@tcp(database:3306)/projectname?charset=utf8mb4&parseTime=True&loc=Local"
+      PROJECTNAME_STATIC_FILE_MASTER_KEY: "LU2SpvQeN5n9wgz1d7Wq"
     volumes:
       - ./static:/app/static
     networks:
-      - golang
+      - https
       - internal
     depends_on:
       database:
         condition: service_healthy
   database:
-    image: mysql:8.3.0
+    image: allape/autodumpmysql:8
     restart: unless-stopped
     networks:
       - internal
     healthcheck:
-      test: "curl http://127.0.0.1:3306 > /dev/null && exit 0 || exit 1"
+      test: mysql -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SELECT 1" > /dev/null 2>&1 || exit 1
     environment:
-      - MYSQL_ROOT_PASSWORD=EfF74MD1l9t7TZ0VY3EF
-      - MYSQL_DATABASE=golang
+      - MYSQL_ROOT_PASSWORD=2mu4XX0HBmajg7hcbFFn
+      - MYSQL_DATABASE=goor
     volumes:
       - ./database:/var/lib/mysql
 networks:
-  golang:
+  https:
   internal:
     internal: true

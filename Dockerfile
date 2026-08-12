@@ -1,13 +1,26 @@
-FROM node:25 AS ui_builder
+FROM node:25 AS ui_admin_builder
 
 WORKDIR /build
 
-COPY ui/package.json        .
-COPY ui/package-lock.json   .
+COPY ui/admin/package.json        .
+COPY ui/admin/package-lock.json   .
 
 RUN npm install --no-audit
 
-COPY ui .
+COPY ui/admin .
+
+RUN npm run build
+
+FROM node:25 AS ui_client_builder
+
+WORKDIR /build
+
+COPY ui/client/package.json        .
+COPY ui/client/package-lock.json   .
+
+RUN npm install --no-audit
+
+COPY ui/client .
 
 RUN npm run build
 
@@ -28,13 +41,23 @@ FROM alpine:3
 
 WORKDIR /app
 
-COPY --from=ui_builder /build/dist ui/dist
+COPY --from=ui_admin_builder /build/dist ui/admin/dist
+COPY --from=ui_client_builder /build/dist ui/client/dist
 COPY --from=builder /build/app app
 
 EXPOSE 8080
 
 CMD [ "/app/app" ]
 
-### build ###
-# export docker_http_proxy=http://host.docker.internal:1080
-# docker build --platform linux/amd64 --build-arg http_proxy=$docker_http_proxy --build-arg https_proxy=$docker_http_proxy -f Dockerfile -t allape/golang:latest .
+### BUILD ###
+# export x_docker_http_proxy="http://host.docker.internal:1080"
+# export x_docker_image_name="allape/projectname:8"
+# export x_docker_registry_prefix="docker-registry.lan.allape.cc/"
+# export x_docker_registry_image_name="$x_docker_registry_prefix$x_docker_image_name"
+
+# docker build --platform linux/arm64 --build-arg http_proxy=$x_docker_http_proxy --build-arg https_proxy=$x_docker_http_proxy -f Dockerfile -t "$x_docker_image_name-arm64" .
+# docker build --platform linux/amd64 --build-arg http_proxy=$x_docker_http_proxy --build-arg https_proxy=$x_docker_http_proxy -f Dockerfile -t $x_docker_image_name .
+# docker tag $x_docker_image_name $x_docker_registry_image_name && docker push $x_docker_registry_image_name
+
+# sudo docker pull $x_docker_registry_image_name && sudo docker tag $x_docker_registry_image_name $x_docker_image_name
+# sudo docker compose -f docker.compose.yaml up -d
