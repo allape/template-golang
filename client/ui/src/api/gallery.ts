@@ -1,13 +1,25 @@
-import { config, get } from "@allape/gocrud-react";
+import { Config } from "@allape/gocrud";
+import { antdget, config } from "@allape/gocrud-react";
 import { IGallery } from "../model/gallery.ts";
 import { IItem, IItemTag } from "../model/item.ts";
 import { ITag } from "../model/tag.ts";
 
-export function getAllGalleries(): Promise<IGallery[]> {
-  return get(`${config.SERVER_URL}/gallery/all`);
+export interface IGalleryInfo {
+  info: IGallery;
+  tags: ITag[];
+  /**
+   * @deprecated
+   */
+  cover: IItem;
 }
 
-export interface IGalleryDetailPayload {
+export function getAllGalleries(
+  cfg?: Config<IGalleryInfo[]>,
+): Promise<IGalleryInfo[]> {
+  return antdget(`${config.SERVER_URL}/gallery/all`, cfg);
+}
+
+export interface IGalleryDetail {
   gallery: IGallery;
   items: IItem[];
   itemTags: IItemTag[];
@@ -16,8 +28,9 @@ export interface IGalleryDetailPayload {
 
 export function getDetailById(
   id: IGallery["id"],
-): Promise<IGalleryDetailPayload> {
-  return get(`${config.SERVER_URL}/gallery/detail/${id}`);
+  cfg?: Config<IGalleryDetail>,
+): Promise<IGalleryDetail> {
+  return antdget(`${config.SERVER_URL}/gallery/detail/${id}`, cfg);
 }
 
 /**

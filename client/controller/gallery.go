@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"slices"
+	"strconv"
 
 	"github.com/allape/gocrud"
 	"github.com/allape/gogger"
@@ -19,8 +20,14 @@ import (
 
 var galleryl = gogger.New("client:controller:gallery")
 
-// GalleryDetailPayload
-// TODO cache for this data
+// TODO cache for data
+
+type GalleryInfo struct {
+	Info model.Gallery `json:"info"`
+	Tags []model.Tag   `json:"tags"`
+	//Cover *model.Item   `json:"cover"`
+}
+
 type GalleryDetailPayload struct {
 	Gallery     model.Gallery      `json:"gallery"`
 	GalleryTags []model.GalleryTag `json:"galleryTags"`
@@ -44,7 +51,74 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			return
 		}
 
-		gocrud.MakeOkayDataResponse(context, galleries)
+		galleryIds := make([]gocrud.ID, len(galleries))
+		for i, gallery := range galleries {
+			galleryIds[i] = gallery.ID
+		}
+
+		var galleryTags []model.GalleryTag
+		if err := db.Model(&model.GalleryTag{}).Where("`gallery_id` IN ?", galleryIds).Find(&galleryTags).Error; err != nil {
+			galleryl.Error().Printf("failed to get gallery tags: %v", err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get gallery tags [error]")
+			return
+		}
+
+		tagIds := make([]gocrud.ID, 0, len(galleryTags))
+		for _, galleryTag := range galleryTags {
+			if !slices.Contains(tagIds, galleryTag.TagID) {
+				tagIds = append(tagIds, galleryTag.TagID)
+			}
+		}
+
+		var tags []model.Tag
+		if err := db.Model(&model.Tag{}).Where("`id` IN ?", tagIds).Find(&tags).Error; err != nil {
+			galleryl.Error().Printf("failed to get tags: %v", err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get tags [error]")
+			return
+		}
+
+		simpleGalleries := make([]GalleryInfo, len(galleries))
+		for i, gallery := range galleries {
+			var innerGalleryTags []model.Tag
+			for _, gt := range galleryTags {
+				if gt.GalleryID == gallery.ID {
+					for _, tag := range tags {
+						if tag.ID == gt.TagID {
+							innerGalleryTags = append(innerGalleryTags, tag)
+							continue
+						}
+					}
+					continue
+				}
+			}
+
+			//var items []model.Item
+			//if err := db.
+			//	Model(&model.Item{}).
+			//	Joins("JOIN gallery_items ON gallery_items.item_id = items.id").
+			//	Where("gallery_items.gallery_id = ?", gallery.ID).
+			//	Limit(1).Find(
+			//	&items,
+			//).Error; err != nil {
+			//	galleryl.Error().Printf("failed to get gallery items: %v", err)
+			//	gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get gallery items [error]")
+			//	return
+			//}
+
+			simpleGalleries[i] = GalleryInfo{
+				Info: gallery,
+				Tags: innerGalleryTags,
+				//Cover: gocrud.TernaryFunc[*model.Item](func() bool {
+				//	return len(items) > 0
+				//}, func() *model.Item {
+				//	return &items[0]
+				//}, func() *model.Item {
+				//	return nil
+				//}),
+			}
+		}
+
+		gocrud.MakeOkayDataResponse(context, simpleGalleries)
 	})
 
 	group.GET("/detail/:galleryId", func(context *gin.Context) {
@@ -142,27 +216,35 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		gocrud.MakeOkayDataResponse(context, payload)
 	})
 
+	const ErrorMessageHeaderName = "X-Error-Message"
+	makeErrorImageResponse := func(context *gin.Context, encodedPngImage []byte, status int, message string) {
+		NoCache(context)
+		context.Header(ErrorMessageHeaderName, message)
+		context.Data(status, asset.MIME, gocrud.Ternary(encodedPngImage == nil, asset.NoImage, encodedPngImage))
+	}
+
 	// retrieving the first image of the gallery of :galleryId when :itemId is 0
 	group.GET("/image/:galleryId/:itemId", func(context *gin.Context) {
 		user, ok := gophorward.GinGetUser(context)
 		if !ok {
-			Make401Response(context)
+			//Make401Response(context)
+			makeErrorImageResponse(context, asset.DameMan, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 			return
 		}
 
-		galleryId := gocrud.Pick(gocrud.IDsFromCommaSeparatedString(context.Param("galleryId")), 0, 0)
-		if galleryId == 0 {
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "invalid gallery id")
+		galleryId, err := strconv.ParseInt(context.Param("galleryId"), 10, 64)
+		if err != nil || galleryId <= 0 {
+			makeErrorImageResponse(context, nil, http.StatusBadRequest, "invalid gallery id")
 			return
 		}
 
 		var gallery model.Gallery
 		if err := db.Model(&gallery).Where("`id` = ?", galleryId).First(&gallery).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery: %v", err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find gallery [error]")
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find gallery [error]")
 			return
 		} else if gallery.ID == 0 {
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "failed to find gallery")
+			makeErrorImageResponse(context, nil, http.StatusNotFound, "failed to find gallery")
 			return
 		}
 
@@ -171,72 +253,66 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 				galleryl.Error().Printf("failed to check access for user %s of gallery %d: %v", user.ID, gallery.ID, err)
 			}
 			//Make403Response(context)
-			context.Data(http.StatusForbidden, asset.MIME, asset.DameMan)
+			makeErrorImageResponse(context, asset.DameMan, http.StatusForbidden, http.StatusText(http.StatusForbidden))
 			return
 		}
 
-		var galleryItem model.GalleryItem
-
-		itemId := gocrud.Pick(gocrud.IDsFromCommaSeparatedString(context.Param("itemId")), 0, 0)
-
-		//if itemId == 0 {
-		//	gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "invalid item id")
-		//	return
-		//}
-
-		if err := gocrud.TernaryFunc(
-			func() bool {
-				return itemId == 0
-			},
-			func() error {
-				return db.Model(&galleryItem).Where("`gallery_id` = ?", galleryId).Order("`priority` ASC, `updated_at` DESC").First(&galleryItem).Error
-			},
-			func() error {
-				return db.Model(&galleryItem).Where("`gallery_id` = ? AND `item_id` = ?", galleryId, itemId).First(&galleryItem).Error
-			},
-		); err != nil {
-			galleryl.Error().Printf("failed to get gallery item by gallery id %d and item id %d: %v", galleryId, itemId, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find gallery item [error]")
-			return
-		} else if galleryItem.ItemID == 0 {
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "failed to find gallery item")
+		itemId, err := strconv.ParseInt(context.Param("itemId"), 10, 64)
+		if err != nil || itemId < 0 {
+			makeErrorImageResponse(context, nil, http.StatusBadRequest, "invalid item id")
 			return
 		}
 
-		var item model.Item
-		if err := db.Model(&item).Where("`id` = ?", galleryItem.ItemID).First(&item).Error; err != nil {
-			galleryl.Error().Printf("failed to get item by item id %d: %v", galleryItem.ItemID, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find item [error]")
-			return
-		} else if item.ID == 0 {
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "failed to find item")
+		var items []model.Item
+
+		if itemId == 0 {
+			err = db.Model(&model.Item{}).
+				Joins("JOIN gallery_items ON gallery_items.item_id = items.id").
+				Where("gallery_items.gallery_id = ?", gallery.ID).
+				Order("`priority` ASC, `updated_at` DESC").
+				Limit(1).
+				Find(&items).Error
+		} else {
+			err = db.Model(&model.Item{}).Where("`id` = ?", itemId).Limit(1).Find(&items).Error
+		}
+
+		if err != nil {
+			galleryl.Error().Printf("failed to get item by item id %d: %v", itemId, err)
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find item [error]")
 			return
 		}
+
+		if len(items) == 0 {
+			makeErrorImageResponse(context, nil, http.StatusNotFound, "failed to find item")
+			return
+		}
+
+		item := items[0]
 
 		if item.Src == "" {
 			galleryl.Error().Printf("item src is empty for %d", item.ID)
-			context.Data(http.StatusNotFound, asset.MIME, asset.NoImage)
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "src is empty")
 			return
 		}
 
 		file, err := os.Open(path.Join(env.StaticFolder, item.Src))
 		if err != nil {
 			galleryl.Error().Printf("failed to open gallery item file by gallery id %d and item id %d: %v", galleryId, itemId, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to open gallery item file [error]")
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to open gallery item file [error]")
 			return
 		}
 
 		var fileObject model.FileObject
 		if err := db.Model(&fileObject).Where("`filename` = ?", item.Src).First(&fileObject).Error; err != nil {
-			galleryl.Error().Printf("failed to get file object by item id %d: %v", galleryItem.ItemID, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find file object [error]")
+			galleryl.Error().Printf("failed to get file object by item id %d: %v", itemId, err)
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find file object [error]")
 			return
 		}
 
 		serveFunc, err := gocrud.NewDareHttpServeFunc(file, fileObject.HttpFileSystemObjectBase.ToHttpFile())
 		if err != nil {
-			galleryl.Error().Printf("failed to decrypt file object by item id %d: %v", galleryItem.ItemID, err)
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to decrypt file object [error]")
+			galleryl.Error().Printf("failed to decrypt file object by item id %d: %v", itemId, err)
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to decrypt file object [error]")
 			return
 		}
 

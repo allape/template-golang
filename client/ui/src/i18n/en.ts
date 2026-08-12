@@ -8,6 +8,10 @@ const Translation = {
   select: "Select",
   createdAt: "Created At",
   updatedAt: "Updated At",
+
+  gallery: {
+    galleryNotValid: "Gallery is invalid.",
+  },
 };
 
 export default Translation;

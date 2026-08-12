@@ -2,7 +2,9 @@ import { i18n, ThemeProvider } from "@allape/gocrud-react";
 import { Locale } from "antd/es/locale";
 import zhCN from "antd/locale/zh_CN";
 import { ReactElement } from "react";
+import { BrowserRouter, Route, Routes } from "react-router";
 import styles from "./style.module.scss";
+import Gallery from "./view/Gallery";
 import Home from "./view/Home";
 
 function getLocale(): Locale | undefined {
@@ -18,7 +20,12 @@ export default function App(): ReactElement {
   return (
     <ThemeProvider locale={getLocale()}>
       <div className={styles.wrapper}>
-        <Home />
+        <BrowserRouter>
+          <Routes>
+            <Route index element={<Home />} />
+            <Route path="/gallery/:galleryId" element={<Gallery />} />
+          </Routes>
+        </BrowserRouter>
       </div>
     </ThemeProvider>
   );
