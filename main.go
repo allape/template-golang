@@ -122,16 +122,6 @@ func SetupControllers(db *gorm.DB) (*gin.Engine, error) {
 		return nil, fmt.Errorf("failed to setup gallery tag controller: %v", err)
 	}
 
-	err = controller.SetupShareLinkController(apiGrp.Group("/share-link"), db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to setup share link controller: %v", err)
-	}
-
-	err = controller.SetupShareLinkGalleryController(apiGrp.Group("/share-link-gallery"), db)
-	if err != nil {
-		return nil, fmt.Errorf("failed to setup share link gallery controller: %v", err)
-	}
-
 	err = controller.SetupUserGalleryController(apiGrp.Group("/user-gallery"), db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to setup user gallery controller: %v", err)
@@ -172,8 +162,6 @@ func SetupDatabase() (*gorm.DB, error) {
 		&model.Gallery{},
 		&model.GalleryItem{},
 		&model.GalleryTag{},
-		&model.ShareLink{},
-		&model.ShareLinkGallery{},
 		&model.UserGallery{},
 	)
 	if err != nil {

@@ -10,3 +10,7 @@ import (
 func Make401Response(context *gin.Context) {
 	gocrud.MakeErrorResponse(context, gocrud.RestCoder.FromStatus(http.StatusUnauthorized), http.StatusText(http.StatusUnauthorized))
 }
+
+func Make403Response(context *gin.Context) {
+	gocrud.MakeErrorResponse(context, gocrud.RestCoder.FromStatus(http.StatusForbidden), http.StatusText(http.StatusForbidden))
+}

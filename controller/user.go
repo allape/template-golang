@@ -2,48 +2,12 @@ package controller
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/allape/gocrud"
 	"github.com/allape/golang/model"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
-
-var shareLinkL = l.New("sharelink")
-
-func SetupShareLinkController(group *gin.RouterGroup, db *gorm.DB) error {
-	err := gocrud.Setup(group, db, shareLinkL.New("crud"), &gocrud.Crud[model.ShareLink]{
-		SearchHandlers: gocrud.BaseSearchHandlers(gocrud.SearchHandlers{
-			"like_name": gocrud.KeywordLike("name", nil),
-		}),
-		WillSave: func(record *model.ShareLink, context *gin.Context, db *gorm.DB) {
-			record.Name = strings.TrimSpace(record.Name)
-			if record.Name == "" {
-				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "name is required")
-				return
-			}
-
-			if record.ID == 0 {
-				record.NonceID = strings.ReplaceAll(uuid.NewString(), "-", "")
-			}
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func SetupShareLinkGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
-	return gocrud.SetupM2MConnectorController[model.ShareLinkGallery](
-		group, db, shareLinkL.New("gallery"),
-		"ShareID", "GalleryID",
-		nil,
-	)
-}
 
 var userGalleryL = l.New("user:gallery")
 
@@ -55,7 +19,7 @@ func SetupUserGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			"galleryId": gocrud.KeywordEqual("gallery_id", nil),
 		}),
 		WillSave: func(record *model.UserGallery, context *gin.Context, db *gorm.DB) {
-			if record.UserID == 0 {
+			if record.UserID == "" {
 				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "userId is required")
 				return
 			} else if record.GalleryID == 0 {
@@ -82,6 +46,29 @@ func SetupUserGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
+	group.PUT("/all", func(context *gin.Context) {
+		var userGalleries []model.UserGallery
+		err := context.ShouldBindJSON(&userGalleries)
+		if err != nil {
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "invalid request")
+			return
+		}
+
+		if len(userGalleries) == 0 {
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "empty set")
+			return
+		}
+
+		res := db.Model(&model.UserGallery{}).Save(&userGalleries)
+		if res.Error != nil {
+			userGalleryL.Error().Printf("failed to save user galleries: %v", res)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), res)
+			return
+		}
+
+		gocrud.MakeOkayDataResponse(context, res.RowsAffected)
+	})
 
 	return nil
 }

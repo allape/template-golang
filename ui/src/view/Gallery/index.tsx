@@ -28,9 +28,11 @@ import { GalleryCrudy, GalleryTagHandler } from "../../api/gallery.ts";
 import ItemCrudyButton from "../../component/ItemCrudyButton";
 import TagCrudyButton from "../../component/TagCrudyButton";
 import TagSelector from "../../component/TagSelector";
+import UserGalleryCrudyButton from "../../component/UserGalleryCrudyButton";
 import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
 import { IItem, IItemSearchParams } from "../../model/item.ts";
 import { ITag, ITagSearchParams } from "../../model/tag.ts";
+import { IUserGallery, IUserGallerySearchParams } from "../../model/user.ts";
 import styles from "./style.module.scss";
 
 interface IGalleryModified extends IGallery {
@@ -40,6 +42,8 @@ interface IGalleryModified extends IGallery {
 
 type IRecord = IGalleryModified;
 type ISearchParams = IGallerySearchParams;
+
+const crudy = GalleryCrudy;
 
 const DefaultFormValue: Partial<IRecord> = {
   isPublic: false,
@@ -53,6 +57,10 @@ export default function Gallery(): ReactElement {
     () => ({
       Tag: NewCrudyButtonEventEmitter<ITag, ITagSearchParams>(),
       Item: NewCrudyButtonEventEmitter<IItem, IItemSearchParams>(),
+      UserGallery: NewCrudyButtonEventEmitter<
+        IUserGallery,
+        IUserGallerySearchParams
+      >(),
     }),
     [],
   );
@@ -145,6 +153,13 @@ export default function Gallery(): ReactElement {
           });
         },
       },
+      {
+        key: "UserGallery",
+        label: `${t("gocrud.manage")} ${t("user.gallery._")}`,
+        onClick: () => {
+          emitter.UserGallery.dispatchEvent("open");
+        },
+      },
     ],
     [emitter, t],
   );
@@ -198,7 +213,7 @@ export default function Gallery(): ReactElement {
   const handleAfterSaved = useCallback(
     async (record: IRecord, form: FormInstance<IRecord>) => {
       const tagIds: ITag["id"][] | undefined = form.getFieldValue("_tagIds");
-      if (tagIds && tagIds.length > 0) {
+      if (tagIds?.length) {
         await GalleryTagHandler.saveAfterDelete(
           "galleryId",
           record.id,
@@ -218,7 +233,7 @@ export default function Gallery(): ReactElement {
         name={t("gallery._")}
         title={t("gallery._")}
         titleSearchField="like_name"
-        crudy={GalleryCrudy}
+        crudy={crudy}
         columns={columns}
         searchParams={searchParams}
         defaultFormValue={DefaultFormValue}
@@ -237,6 +252,7 @@ export default function Gallery(): ReactElement {
             <div style={{ display: "none" }}>
               <TagCrudyButton emitter={emitter.Tag} />
               <ItemCrudyButton emitter={emitter.Item} />
+              <UserGalleryCrudyButton emitter={emitter.UserGallery} />
             </div>
           </>
         }

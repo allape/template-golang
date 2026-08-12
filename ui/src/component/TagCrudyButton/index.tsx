@@ -15,6 +15,8 @@ import { ITag, ITagSearchParams } from "../../model/tag.ts";
 type IRecord = ITag;
 type ISearchParams = ITagSearchParams;
 
+const crudy = TagCrudy;
+
 const DefaultFormValue: Partial<IRecord> = {
   priority: 0,
 };
@@ -83,7 +85,7 @@ export default function TagCrudyButton(
       name={t("tag._")}
       titleSearchField="like_name"
       columns={columns}
-      crudy={TagCrudy}
+      crudy={crudy}
       searchParams={searchParams}
       defaultFormValue={DefaultFormValue}
       {...props}

@@ -31,7 +31,7 @@ import { ITag } from "../../model/tag.ts";
 import GallerySelector from "../GallerySelector";
 import TagSelector from "../TagSelector";
 
-interface ModifiedItem extends IItem {
+interface IItemModified extends IItem {
   _src?: string;
   _continuesUpload?: boolean;
 
@@ -42,8 +42,10 @@ interface ModifiedItem extends IItem {
   _galleries?: IGallery[];
 }
 
-type IRecord = ModifiedItem;
+type IRecord = IItemModified;
 type ISearchParams = IItemSearchParams;
+
+const crudy = ItemCrudy;
 
 const DefaultFormValue: Partial<IRecord> = {
   priority: 0,
@@ -142,7 +144,7 @@ export default function ItemCrudyButton({
         r._src = `${config.SERVER_STATIC_URL}${r.src}`;
       });
 
-      await ItemTagHandler.get<ITag, ModifiedItem>(
+      await ItemTagHandler.get<ITag, IItemModified>(
         "itemId",
         records,
         {},
@@ -152,7 +154,7 @@ export default function ItemCrudyButton({
         },
       );
 
-      await GalleryItemHandler.get<IGallery, ModifiedItem>(
+      await GalleryItemHandler.get<IGallery, IItemModified>(
         "itemId",
         records,
         {},
@@ -176,30 +178,26 @@ export default function ItemCrudyButton({
 
   const handleAfterSaved = useCallback(
     async (record: IRecord, form: FormInstance<IRecord>): Promise<boolean> => {
-      const galleryIds: number[] | undefined =
-        form.getFieldValue("_galleryIds");
-      if (galleryIds && galleryIds.length > 0) {
-        await GalleryItemHandler.saveAfterDelete(
-          "itemId",
-          record.id,
-          galleryIds.map((gi) => ({
-            galleryId: gi,
-            itemId: record.id,
-          })),
-        );
-      }
+      const galleryIds: IGallery["id"][] =
+        form.getFieldValue("_galleryIds") || [];
+      await GalleryItemHandler.saveAfterDelete(
+        "itemId",
+        record.id,
+        galleryIds.map((gi) => ({
+          galleryId: gi,
+          itemId: record.id,
+        })),
+      );
 
-      const tagIds: ITag["id"][] | undefined = form.getFieldValue("_tagIds");
-      if (tagIds && tagIds.length > 0) {
-        await ItemTagHandler.saveAfterDelete(
-          "itemId",
-          record.id,
-          tagIds.map((ti) => ({
-            itemId: record.id,
-            tagId: ti,
-          })),
-        );
-      }
+      const tagIds: ITag["id"][] = form.getFieldValue("_tagIds") || [];
+      await ItemTagHandler.saveAfterDelete(
+        "itemId",
+        record.id,
+        tagIds.map((ti) => ({
+          itemId: record.id,
+          tagId: ti,
+        })),
+      );
 
       const shouldStop: boolean = form.getFieldValue("_continuesUpload");
 
@@ -240,7 +238,7 @@ export default function ItemCrudyButton({
       name={t("item._")}
       titleSearchField="like_name"
       columns={columns}
-      crudy={ItemCrudy}
+      crudy={crudy}
       searchParams={searchParams}
       defaultFormValue={defaultFormValue}
       afterListed={handleAfterListed}

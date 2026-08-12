@@ -53,6 +53,14 @@ const Translation = {
       no: "Private",
     },
   },
+
+  user: {
+    gallery: {
+      _: "User Gallery",
+      userId: "User ID",
+      gallery: "Gallery",
+    },
+  },
 };
 
 export default Translation;

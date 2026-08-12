@@ -9,6 +9,7 @@ import (
 	"github.com/allape/gocrud"
 	"github.com/allape/gogger"
 	"github.com/allape/golang/asset"
+	"github.com/allape/golang/client/helper"
 	"github.com/allape/golang/env"
 	"github.com/allape/golang/model"
 	"github.com/allape/gophorward"
@@ -18,6 +19,8 @@ import (
 
 var galleryl = gogger.New("client:controller:gallery")
 
+// GalleryDetailPayload
+// TODO cache for this data
 type GalleryDetailPayload struct {
 	Gallery     model.Gallery      `json:"gallery"`
 	GalleryTags []model.GalleryTag `json:"galleryTags"`
@@ -69,8 +72,11 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			return
 		}
 
-		if !gallery.IsPublic && gallery.CreatedBy != user.ID {
-			gocrud.MakeErrorResponse(context, gocrud.RestCoder.FromStatus(http.StatusForbidden), http.StatusText(http.StatusForbidden))
+		if ok, err := helper.UserCanAccessTo(user, &gallery, context, db); !ok {
+			if err != nil {
+				galleryl.Error().Printf("failed to check access for user %s of gallery %d: %v", user.ID, gallery.ID, err)
+			}
+			Make403Response(context)
 			return
 		}
 		payload.Gallery = gallery
@@ -160,8 +166,11 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			return
 		}
 
-		if !gallery.IsPublic && gallery.CreatedBy != user.ID {
-			//gocrud.MakeErrorResponse(context, gocrud.RestCoder.FromStatus(http.StatusForbidden), http.StatusText(http.StatusForbidden))
+		if ok, err := helper.UserCanAccessTo(user, &gallery, context, db); !ok {
+			if err != nil {
+				galleryl.Error().Printf("failed to check access for user %s of gallery %d: %v", user.ID, gallery.ID, err)
+			}
+			//Make403Response(context)
 			context.Data(http.StatusForbidden, asset.MIME, asset.DameMan)
 			return
 		}
