@@ -1,6 +1,72 @@
-.fixedMenu {
-  position: fixed;
-  z-index: 9999;
-  top: 0;
-  right: 0;
+@import "../../style/common";
+
+.wrapper {
+  padding: 10px;
+  max-width: $MaxWrapperWidth;
+  box-sizing: border-box;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+  }
+
+  .gallery {
+    position: relative;
+    width: $MinWrapperWidth;
+    height: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+
+    .cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .name {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      text-align: center;
+      padding: 12px 10px;
+      font-size: 20px;
+    }
+  }
+
+  @media screen and (max-width: $MinWrapperWidth) {
+    padding: 0;
+    display: block;
+
+    .gallery {
+      width: 100%;
+      border-radius: 0;
+    }
+  }
+
+  @media screen and (min-width: $MaxWrapperWidth) {
+    padding: 10px 0;
+  }
+
+  @media (pointer: fine) {
+    .gallery {
+      transition: 0.3s;
+
+      &:hover {
+        box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+        scale: 1.01;
+      }
+    }
+  }
 }

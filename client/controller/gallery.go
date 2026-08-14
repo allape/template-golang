@@ -45,7 +45,13 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		}
 
 		var galleries []model.Gallery
-		if err := db.Model(&model.Gallery{}).Where("`created_by` = ?", user.ID).Find(&galleries).Error; err != nil {
+		if err := db.Model(&model.Gallery{}).
+			Where(
+				"created_by = ? OR id IN (SELECT ug.gallery_id FROM user_galleries ug WHERE ug.user_id = ?)",
+				user.ID,
+				user.ID,
+			).
+			Find(&galleries).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery: %v", err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get gallery [error]")
 			return

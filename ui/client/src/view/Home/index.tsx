@@ -1,13 +1,14 @@
 import { useLoading, useProxy } from "@allape/use-loading";
-import { Empty, Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
+import { Empty } from "antd";
 import { ReactElement, useEffect } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import {
   getAllGalleries,
   IGalleryInfo,
   toImageURL,
 } from "../../api/gallery.ts";
+import styles from "./style.module.scss";
 
 interface IGalleryInfoModified extends IGalleryInfo {
   _coverLink?: string;
@@ -15,7 +16,6 @@ interface IGalleryInfoModified extends IGalleryInfo {
 
 export default function Home(): ReactElement {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { loading, execute } = useLoading();
 
   const [galleries, , setGalleries] = useProxy<IGalleryInfoModified[]>([]);
@@ -31,19 +31,32 @@ export default function Home(): ReactElement {
   }, [execute, setGalleries]);
 
   return (
-    <div>
-      <Spin spinning={loading}>
-        {galleries.length === 0 ? <Empty /> : undefined}
-        {galleries.map((gallery) => (
+    <div className={styles.wrapper}>
+      {loading ? (
+        <div className={styles.loading}>
+          <LoadingOutlined />
+        </div>
+      ) : undefined}
+      {galleries.length === 0 ? (
+        <Empty />
+      ) : (
+        galleries.map((gallery) => (
           <div
             key={gallery.info.id}
+            className={styles.gallery}
+            title={gallery.info.name}
             onClick={() => navigate(`/gallery/${gallery.info.id}`)}
           >
-            <img width={100} src={gallery._coverLink} alt={gallery.info.name} />
-            <div title={t("gallery.name")}>{gallery.info.name}</div>
+            <img
+              className={styles.cover}
+              loading="lazy"
+              src={gallery._coverLink}
+              alt={gallery.info.name}
+            />
+            <div className={styles.name}>{gallery.info.name}</div>
           </div>
-        ))}
-      </Spin>
+        ))
+      )}
     </div>
   );
 }

@@ -1,15 +1,18 @@
 import { useLoading, useProxy } from "@allape/use-loading";
-import { Button } from "antd";
+import { HomeOutlined, LoadingOutlined } from "@ant-design/icons";
+import { Button, Tag } from "antd";
+import cls from "classnames";
+import { IItem } from "common/src/model/item.ts";
+import { ITag } from "common/src/model/tag.ts";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   getDetailById,
   IGalleryDetail,
   toImageURL,
 } from "../../api/gallery.ts";
-import { IItem } from "../../model/item.ts";
-import { ITag } from "../../model/tag.ts";
+import styles from "./style.module.scss";
 
 interface IItemModified extends IItem {
   _src?: string;
@@ -21,14 +24,17 @@ interface IGalleryDetailModified extends IGalleryDetail {
 }
 
 export default function Gallery(): ReactElement {
+  const navigation = useNavigate();
   const { t } = useTranslation();
-  const { loading, execute } = useLoading();
+  const { execute } = useLoading();
 
   const { galleryId } = useParams<Record<"galleryId", string | undefined>>();
 
   const stoperRef = useRef<AbortController>();
 
-  const [detail, , setDetail] = useProxy<IGalleryDetailModified | undefined>(undefined);
+  const [detail, , setDetail] = useProxy<IGalleryDetailModified | undefined>(
+    undefined,
+  );
   const [items, setItems] = useState<IItemModified[]>([]);
 
   const getDetail = useCallback(() => {
@@ -73,16 +79,75 @@ export default function Gallery(): ReactElement {
     };
   }, [execute, getDetail]);
 
+  const handleBackHome = useCallback(() => {
+    navigation("/");
+  }, [navigation]);
+
+  const openImageInNewTag = useCallback((item?: IItemModified) => {
+    if (!item?._src) {
+      return;
+    }
+    window.open(item._src, "_blank");
+  }, []);
+
   return (
-    <div>
-      {loading && <Button loading type="link" />}
-      {!galleryId ? <div>{t("gallery.galleryNotValid")}</div> : undefined}
-      {detail && <div>{detail.gallery.name}</div>}
-      {items.map((item) => (
-        <div key={item.id}>
-          <img style={{ width: "100%" }} src={item._src} alt={item.name} />
+    <div className={styles.wrapper}>
+      <div className={styles.title}>
+        <Button
+          className={styles.homeButton}
+          type="link"
+          size="large"
+          onClick={handleBackHome}
+        >
+          <HomeOutlined />
+        </Button>
+        <div className={styles.text}>
+          <div className={styles.name}>
+            {detail?.gallery.name || <LoadingOutlined />}
+          </div>
+          <div className={styles.tags}>
+            {detail?.tags?.map((tag) => (
+              <Tag key={tag.id} className={styles.tag}>
+                {tag.name}
+              </Tag>
+            ))}
+          </div>
         </div>
-      ))}
+        <Button
+          className={cls(styles.homeButton, styles.hidden)}
+          type="link"
+          size="large"
+          onClick={handleBackHome}
+        >
+          <HomeOutlined />
+        </Button>
+      </div>
+
+      {!galleryId ? <div>{t("gallery.galleryNotValid")}</div> : undefined}
+
+      <div className={styles.items}>
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className={styles.item}
+            onClick={() => openImageInNewTag(item)}
+          >
+            <img
+              className={styles.cover}
+              loading="lazy"
+              src={item._src}
+              alt={item.name}
+            />
+            <div className={styles.tags}>
+              {item._tags?.map((tag) => (
+                <Tag key={tag.id} className={styles.tag}>
+                  {tag.name}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

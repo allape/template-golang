@@ -35,7 +35,7 @@ var (
 
 	ClientBindAddr      = goenv.Getenv(clientBindAddr, ":8888")
 	ClientUIFolder      = goenv.Getenv(clientUIFolder, "./ui/client/dist/index.html")
-	ClientDebugMode     = goenv.Getenv(clientDebugMode, false)
+	ClientDebugMode     = goenv.Getenv(clientDebugMode, true) // FIXME remove debug mode when production
 	ClientDebugUserID   = goenv.Getenv(clientDebugUserID, "-1")
 	ClientDebugUserName = goenv.Getenv(clientDebugUserName, "allape")
 )
