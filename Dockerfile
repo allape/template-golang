@@ -2,6 +2,10 @@ FROM node:25 AS ui_admin_builder
 
 WORKDIR /build
 
+COPY ui/common .
+
+WORKDIR /build/ui
+
 COPY ui/admin/package.json        .
 COPY ui/admin/package-lock.json   .
 
@@ -14,6 +18,10 @@ RUN npm run build
 FROM node:25 AS ui_client_builder
 
 WORKDIR /build
+
+COPY ui/common .
+
+WORKDIR /build/ui
 
 COPY ui/client/package.json        .
 COPY ui/client/package-lock.json   .
@@ -41,8 +49,8 @@ FROM alpine:3
 
 WORKDIR /app
 
-COPY --from=ui_admin_builder /build/dist ui/admin/dist
-COPY --from=ui_client_builder /build/dist ui/client/dist
+COPY --from=ui_admin_builder /build/ui/dist ui/admin/dist
+COPY --from=ui_client_builder /build/ui/dist ui/client/dist
 COPY --from=builder /build/app app
 
 EXPOSE 8080

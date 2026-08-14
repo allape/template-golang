@@ -1,5 +1,6 @@
 import AntdCrudy, { antdget, config } from "@allape/gocrud-react";
-import { IUserGallery, IUserGallerySearchParams } from "../model/user.ts";
+import { IUserGallery } from "common/src/model/user.ts";
+import { IUserGallerySearchParams } from "../model/user.ts";
 
 export const UserGalleryCrudy = new AntdCrudy<
   IUserGallery,

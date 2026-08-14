@@ -1,15 +1,6 @@
-import { IBase, IBaseSearchParams } from "@allape/gocrud";
-import { ITimeSortSearchParams } from "@allape/gocrud/src/model.ts";
+import { IBaseSearchParams } from "@allape/gocrud";
 
-export interface ITag extends IBase {
-  name: string;
-  alias: string;
-  color: string;
-  description: string;
-}
-
-export interface ITagSearchParams
-  extends IBaseSearchParams, ITimeSortSearchParams {
+export interface ITagSearchParams extends IBaseSearchParams {
   like_name?: string;
   like_alias?: string;
   like_keyword?: string;

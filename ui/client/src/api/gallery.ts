@@ -1,8 +1,8 @@
 import { Config } from "@allape/gocrud";
 import { antdget, config } from "@allape/gocrud-react";
-import { IGallery } from "../model/gallery.ts";
-import { IItem, IItemTag } from "../model/item.ts";
-import { ITag } from "../model/tag.ts";
+import { IGallery } from "common/src/model/gallery.ts";
+import { IItem, IItemTag } from "common/src/model/item.ts";
+import { ITag } from "common/src/model/tag.ts";
 
 export interface IGalleryInfo {
   info: IGallery;

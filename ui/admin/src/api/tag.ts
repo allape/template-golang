@@ -1,4 +1,7 @@
 import Crudy, { config } from "@allape/gocrud-react";
-import { ITag } from "../model/tag.ts";
+import { ITag } from "common/src/model/tag.ts";
+import { IItemSearchParams } from "../model/item.ts";
 
-export const TagCrudy = new Crudy<ITag>(`${config.SERVER_URL}/tag`);
+export const TagCrudy = new Crudy<ITag, IItemSearchParams>(
+  `${config.SERVER_URL}/tag`,
+);

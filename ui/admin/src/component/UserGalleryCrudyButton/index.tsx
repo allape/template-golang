@@ -4,6 +4,8 @@ import {
   ICrudyButtonProps,
 } from "@allape/gocrud-react";
 import { Form, InputNumber, TableColumnsType } from "antd";
+import { IGallery } from "common/src/model/gallery.ts";
+import { IUserGallery } from "common/src/model/user.ts";
 import { ReactElement, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GalleryCrudy } from "../../api/gallery.ts";
@@ -12,8 +14,7 @@ import {
   saveAllUserGallery,
   UserGalleryCrudy,
 } from "../../api/user.ts";
-import { IGallery } from "../../model/gallery.ts";
-import { IUserGallery, IUserGallerySearchParams } from "../../model/user.ts";
+import { IUserGallerySearchParams } from "../../model/user.ts";
 import GallerySelector from "../GallerySelector";
 
 interface IUserGalleryModified extends IUserGallery {
@@ -29,7 +30,14 @@ type ISearchParams = IUserGallerySearchParams;
 
 const crudy = UserGalleryCrudy;
 
-export type IUserGalleryCrudyButtonProps = Partial<ICrudyButtonProps<IRecord>>;
+const TableProps: ICrudyButtonProps<IRecord, ISearchParams>["tableProps"] = {
+  rowKey: "_fakeId",
+};
+
+export type IUserGalleryCrudyButtonProps = Omit<
+  Partial<ICrudyButtonProps<IRecord>>,
+  "tableProps"
+>;
 
 export default function UserGalleryCrudyButton(
   props: IUserGalleryCrudyButtonProps,
@@ -115,6 +123,7 @@ export default function UserGalleryCrudyButton(
       editable={false}
       onSave={handleSave}
       onDelete={handleDelete}
+      tableProps={TableProps}
       {...props}
     >
       <Form.Item name="userId" label={t("user.gallery.userId")}>

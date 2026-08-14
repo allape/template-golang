@@ -4,7 +4,6 @@ import { ITag } from "./tag.ts";
 export interface IItem extends IBase {
   name: string;
   src: string;
-  priority: number;
   description: string;
   createdBy: string;
 }

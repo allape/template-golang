@@ -1,5 +1,5 @@
 {
-  "name": "projectname",
+  "name": "client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,6 +16,7 @@
     "@ant-design/icons": "^5.6.1",
     "antd": "^5.29.3",
     "classnames": "^2.5.1",
+    "common": "file:../common",
     "i18next": "^24.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
