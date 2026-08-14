@@ -9,6 +9,9 @@ const Translation = {
   createdAt: "Created At",
   updatedAt: "Updated At",
 
+  home: {
+    search: "Search",
+  },
   gallery: {
     galleryNotValid: "Gallery is invalid.",
   },

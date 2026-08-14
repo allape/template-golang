@@ -8,7 +8,6 @@ import (
 
 	"github.com/allape/gocrud"
 	"github.com/allape/golang/model"
-	"github.com/allape/gophorward"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -42,11 +41,6 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 		},
 		WillSave: func(record *model.Item, context *gin.Context, db *gorm.DB) {
 			record.Name = strings.TrimSpace(record.Name)
-
-			record.CreatedBy = gophorward.UserID(strings.TrimSpace(string(record.CreatedBy)))
-			if record.CreatedBy == "" {
-				record.CreatedBy = "0"
-			}
 		},
 	})
 	if err != nil {
@@ -107,10 +101,6 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 
 			record.Thumbnail = old.Thumbnail
 			record.Src = old.Src
-		}
-
-		if record.CreatedBy == "" {
-			record.CreatedBy = "0"
 		}
 
 		if err := db.Save(&record).Error; err != nil {

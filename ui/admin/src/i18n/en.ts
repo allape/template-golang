@@ -9,6 +9,11 @@ const Translation = {
   createdAt: "Created At",
   updatedAt: "Updated At",
 
+  enabledYesOrNo: {
+    yes: "Enabled",
+    no: "Disabled",
+  },
+
   tag: {
     _: "Tag",
     name: "Name",
@@ -27,6 +32,7 @@ const Translation = {
     src: "Source",
     priority: "Priority",
     description: "Description",
+    enabled: "Enabled",
 
     galleries: "Galleries",
     tags: "Tags",
@@ -41,9 +47,11 @@ const Translation = {
     tags: "Tags",
     isPublic: "Is Public",
     name: "Name",
+    keywords: "Keywords",
     createdBy: "Created By",
     priority: "Priority",
     description: "Description",
+    enabled: "Enabled",
 
     photos: "Photos",
 

@@ -6,7 +6,7 @@ export interface IItem extends IBase {
   src: string;
   thumbnail: string;
   description: string;
-  createdBy: string;
+  enabled: boolean;
 }
 
 export interface IItemTag extends Pick<IBase, "createdAt"> {

@@ -56,7 +56,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		var galleries []model.Gallery
 		if err := db.Model(&model.Gallery{}).
 			Where(
-				"created_by = ? OR id IN (SELECT ug.gallery_id FROM user_galleries ug WHERE ug.user_id = ?) AND `deleted_at` IS NULL",
+				"(created_by = ? OR id IN (SELECT ug.gallery_id FROM user_galleries ug WHERE ug.user_id = ?)) AND `deleted_at` IS NULL AND `enabled` = 1",
 				user.ID,
 				user.ID,
 			).
@@ -156,7 +156,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		var payload GalleryDetailPayload
 
 		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL", galleryId).First(&gallery).Error; err != nil {
+		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL AND `enabled` = 1", galleryId).First(&gallery).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery by %d: %v", galleryId, err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find gallery [error]")
 			return
@@ -177,7 +177,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		var items []model.Item
 		if err := db.Model(&model.Item{}).
 			Where(
-				"`id` IN (SELECT `gi`.`item_id` FROM `gallery_items` `gi` WHERE `gi`.`gallery_id` = ?) AND `deleted_at` IS NULL",
+				"`id` IN (SELECT `gi`.`item_id` FROM `gallery_items` `gi` WHERE `gi`.`gallery_id` = ?) AND `deleted_at` IS NULL AND `enabled` = 1",
 				galleryId,
 			).
 			Order("`priority` DESC, `updated_at` DESC").
@@ -270,7 +270,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		}
 
 		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL", galleryId).First(&gallery).Error; err != nil {
+		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL AND `enabled` = 1", galleryId).First(&gallery).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery: %v", err)
 			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find gallery [error]")
 			return
@@ -299,7 +299,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		if itemId == 0 {
 			err = db.Model(&model.Item{}).
 				Joins("JOIN gallery_items ON gallery_items.item_id = items.id").
-				Where("gallery_items.gallery_id = ? AND items.deleted_at IS NULL", gallery.ID).
+				Where("gallery_items.gallery_id = ? AND items.deleted_at IS NULL AND items.enabled = 1", gallery.ID).
 				Order("items.priority DESC, items.updated_at DESC").
 				Limit(1).
 				Find(&items).Error

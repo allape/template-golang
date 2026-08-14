@@ -13,17 +13,16 @@ import (
 	"github.com/allape/gocrud"
 	"github.com/allape/golang/env"
 	"github.com/allape/golang/helper"
-	"github.com/allape/gophorward"
 	"gorm.io/gorm"
 )
 
 type Item struct {
 	gocrud.Base
-	Name        string            `json:"name"`
-	Src         string            `json:"src"`
-	Thumbnail   string            `json:"thumbnail"`
-	Description string            `json:"description"`
-	CreatedBy   gophorward.UserID `json:"createdBy"`
+	Name        string `json:"name"`
+	Src         string `json:"src"`
+	Thumbnail   string `json:"thumbnail"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
 }
 
 type ItemTag struct {

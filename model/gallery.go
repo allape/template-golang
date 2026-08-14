@@ -12,9 +12,11 @@ const MaxGalleryNameLength = 50
 type Gallery struct {
 	gocrud.Base
 	Name        string            `json:"name"`
+	Keywords    string            `json:"keywords"`
 	IsPublic    bool              `json:"isPublic"`
 	Description string            `json:"description"`
 	CreatedBy   gophorward.UserID `json:"createdBy"`
+	Enabled     bool              `json:"enabled"`
 }
 
 type GalleryItem struct {

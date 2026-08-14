@@ -20,7 +20,7 @@
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     padding: 12px 10px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     box-sizing: border-box;
 
     display: flex;
@@ -54,14 +54,13 @@
   }
 
   .items {
-    padding: 10px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-wrap: wrap;
 
     .item {
-      width: $MinWrapperWidth;
+      width: calc(50% - 5px);
       border-radius: 5px;
       overflow: hidden;
       margin-bottom: 10px;
@@ -82,7 +81,13 @@
 
   @media screen and (min-width: $MaxWrapperWidth) {
     .items {
-      padding: 0;
+      justify-content: space-between;
+    }
+  }
+
+  @media screen and (max-width: $MaxWrapperWidth) {
+    .items {
+      padding: 0 5px;
     }
   }
 

@@ -6,6 +6,7 @@ import {
   EEEvent,
   Ellipsis,
   ICrudyButtonProps,
+  ICrudyTableProps,
   NewCrudyButtonEventEmitter,
 } from "@allape/gocrud-react";
 import {
@@ -15,6 +16,7 @@ import {
   FormInstance,
   Input,
   InputNumber,
+  Switch,
   TableColumnsType,
   Tag,
 } from "antd";
@@ -35,6 +37,7 @@ import { GalleryItemHandler } from "../../api/gallery.ts";
 import { ItemCrudy, ItemTagHandler, upload } from "../../api/item.ts";
 import { IItemSearchParams } from "../../model/item.ts";
 import GallerySelector from "../GallerySelector";
+import StatusTag from "../StatusTag";
 import TagSelector from "../TagSelector";
 
 interface IItemModified extends IItem {
@@ -57,6 +60,7 @@ const crudy = ItemCrudy;
 
 const DefaultFormValue: Partial<IRecord> = {
   priority: 0,
+  enabled: true,
 };
 
 export type IItemCrudyButtonProps = Partial<ICrudyButtonProps<IRecord>>;
@@ -78,6 +82,11 @@ export default function ItemCrudyButton({
       {
         title: t("id"),
         dataIndex: "id",
+        render: (v: IRecord["id"], record: IRecord) => (
+          <div>
+            <StatusTag checked={record.enabled} /> {v}
+          </div>
+        ),
       },
       {
         title: t("item.priority"),
@@ -239,6 +248,15 @@ export default function ItemCrudyButton({
     };
   }, [emitter]);
 
+  const saveModalProps = useMemo<ICrudyTableProps["saveModalProps"]>(
+    () => ({
+      afterOpenChange: () => {
+        fileRef.current = undefined;
+      },
+    }),
+    [],
+  );
+
   return (
     <CrudyButton<IRecord, ISearchParams>
       name={t("item._")}
@@ -251,6 +269,7 @@ export default function ItemCrudyButton({
       afterSaved={handleAfterSaved}
       onSave={handleSave}
       emitter={emitter}
+      saveModalProps={saveModalProps}
       {...props}
     >
       {(record?: Partial<IRecord>) => (
@@ -311,6 +330,13 @@ export default function ItemCrudyButton({
               maxLength={20000}
               rows={10}
               placeholder={t("item.description")}
+            />
+          </Form.Item>
+
+          <Form.Item name="enabled" label={t("item.enabled")}>
+            <Switch
+              checkedChildren={t("enabledYesOrNo.yes")}
+              unCheckedChildren={t("enabledYesOrNo.no")}
             />
           </Form.Item>
         </>

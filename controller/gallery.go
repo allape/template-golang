@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/allape/gocrud"
@@ -16,9 +17,21 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 	err := gocrud.Setup(group, db, galleryL.New("crud"), &gocrud.Crud[model.Gallery]{
 		EnableGetAll: true,
 		SearchHandlers: gocrud.BaseSearchHandlers(gocrud.SearchHandlers{
-			"like_name": gocrud.KeywordLike("name", nil),
-			"isPublic":  gocrud.KeywordEqual("is_public", nil),
-			"createBy":  gocrud.KeywordEqual("created_by", nil),
+			"like_name":     gocrud.KeywordLike("name", nil),
+			"like_keywords": gocrud.KeywordLike("keywords", nil),
+			"keywords": func(db *gorm.DB, values []string, context *gin.Context) (*gorm.DB, error) {
+				if value, ok := gocrud.PickFirstValuableString(values); ok {
+					likeValue := fmt.Sprintf("%%%s%%", value)
+					return db.Where(
+						"`keywords` LIKE ? OR `name` LIKE ?",
+						likeValue,
+						likeValue,
+					), nil
+				}
+				return db, nil
+			},
+			"isPublic": gocrud.KeywordEqual("is_public", nil),
+			"createBy": gocrud.KeywordEqual("created_by", nil),
 		}),
 		WillSave: func(record *model.Gallery, context *gin.Context, db *gorm.DB) {
 			record.Name = strings.TrimSpace(record.Name)
@@ -29,6 +42,8 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "name too long")
 				return
 			}
+
+			record.Keywords = strings.TrimSpace(record.Keywords)
 
 			record.CreatedBy = gophorward.UserID(strings.TrimSpace(string(record.CreatedBy)))
 			if record.CreatedBy == "" {

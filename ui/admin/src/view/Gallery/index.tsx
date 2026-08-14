@@ -20,20 +20,31 @@ import {
   MenuProps,
   Switch,
   TableColumnsType,
+  TableProps,
   Tag,
 } from "antd";
+import { IGallery } from "common/src/model/gallery.ts";
+import { IItem } from "common/src/model/item.ts";
+import { ITag } from "common/src/model/tag.ts";
+import { IUserGallery } from "common/src/model/user.ts";
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { GalleryCrudy, GalleryTagHandler } from "../../api/gallery.ts";
 import ItemCrudyButton from "../../component/ItemCrudyButton";
+import StatusTag from "../../component/StatusTag";
 import TagCrudyButton from "../../component/TagCrudyButton";
 import TagSelector from "../../component/TagSelector";
 import UserGalleryCrudyButton from "../../component/UserGalleryCrudyButton";
-import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
-import { IItem, IItemSearchParams } from "../../model/item.ts";
-import { ITag, ITagSearchParams } from "../../model/tag.ts";
-import { IUserGallery, IUserGallerySearchParams } from "../../model/user.ts";
+import { IGallerySearchParams } from "../../model/gallery.ts";
+import { IItemSearchParams } from "../../model/item.ts";
+import { ITagSearchParams } from "../../model/tag.ts";
+import { IUserGallerySearchParams } from "../../model/user.ts";
 import styles from "./style.module.scss";
+
+const TableScroll: TableProps["scroll"] = {
+  y: "calc(100vh - 200px)",
+  x: true,
+};
 
 interface IGalleryModified extends IGallery {
   _tags?: ITag[];
@@ -48,6 +59,7 @@ const crudy = GalleryCrudy;
 const DefaultFormValue: Partial<IRecord> = {
   isPublic: false,
   priority: 0,
+  enabled: true,
 };
 
 export default function Gallery(): ReactElement {
@@ -75,6 +87,11 @@ export default function Gallery(): ReactElement {
       {
         title: t("id"),
         dataIndex: "id",
+        render: (v: IRecord["id"], record: IRecord) => (
+          <div>
+            <StatusTag checked={record.enabled} /> {v}
+          </div>
+        ),
       },
       {
         title: t("gallery.tags"),
@@ -115,6 +132,11 @@ export default function Gallery(): ReactElement {
             createdBy: value,
           })),
         ),
+      },
+      {
+        title: t("gallery.keywords"),
+        dataIndex: "keywords",
+        render: (v) => <Ellipsis>{v}</Ellipsis>,
       },
       {
         title: t("gallery.description"),
@@ -232,7 +254,7 @@ export default function Gallery(): ReactElement {
       <CrudyTable<IRecord, ISearchParams>
         name={t("gallery._")}
         title={t("gallery._")}
-        titleSearchField="like_name"
+        titleSearchField="keywords"
         crudy={crudy}
         columns={columns}
         searchParams={searchParams}
@@ -241,6 +263,7 @@ export default function Gallery(): ReactElement {
         afterListed={handleAfterListed}
         beforeSave={handleBeforeSave}
         afterSaved={handleAfterSaved}
+        scroll={TableScroll}
         titleExtra={
           <>
             <Divider type="vertical" />
@@ -286,6 +309,10 @@ export default function Gallery(): ReactElement {
           <Input maxLength={200} placeholder={t("gallery.name")} />
         </Form.Item>
 
+        <Form.Item name="keywords" label={t("gallery.keywords")}>
+          <Input maxLength={500} placeholder={t("gallery.keywords")} />
+        </Form.Item>
+
         <Form.Item name="createdBy" label={t("gallery.createdBy")}>
           <Input maxLength={200} placeholder={t("gallery.createdBy")} />
         </Form.Item>
@@ -295,6 +322,13 @@ export default function Gallery(): ReactElement {
             maxLength={20000}
             rows={10}
             placeholder={t("gallery.description")}
+          />
+        </Form.Item>
+
+        <Form.Item name="enabled" label={t("gallery.enabled")}>
+          <Switch
+            checkedChildren={t("enabledYesOrNo.yes")}
+            unCheckedChildren={t("enabledYesOrNo.no")}
           />
         </Form.Item>
       </CrudyTable>

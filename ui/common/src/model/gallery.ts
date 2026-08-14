@@ -4,9 +4,11 @@ import { ITag } from "./tag.ts";
 
 export interface IGallery extends IBase {
   name: string;
+  keywords: string;
   isPublic: boolean;
   description: string;
   createdBy: string;
+  enabled: boolean;
 }
 
 export interface IGalleryItem extends Pick<IBase, "createdAt"> {
