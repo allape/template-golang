@@ -31,10 +31,9 @@ const Translation = {
     galleries: "Galleries",
     tags: "Tags",
 
-    continuesUpload: "Continues Upload",
     priorityDesc: "Larger for higher priority",
     srcRequired: "Please upload an image",
-    saved: "Saved 🎉",
+    fileExtra: "Leave it empty not to replace",
   },
 
   gallery: {

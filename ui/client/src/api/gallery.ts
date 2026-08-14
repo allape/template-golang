@@ -36,11 +36,12 @@ export function getDetailById(
 /**
  * @param galleryId
  * @param itemId retrieve the first image of gallery when 0
+ * @param imageType
  */
 export function toImageURL(
   galleryId: IGallery["id"],
   itemId: IItem["id"] = 0,
+  imageType: "src" | "thumbnail" = "src",
 ): string {
-  // return `${config.STATIC_SERVER_URL}${item.src}`;
-  return `${config.SERVER_URL}/gallery/image/${galleryId}/${itemId}`;
+  return `${config.SERVER_URL}/gallery/${imageType}/${galleryId}/${itemId}`;
 }

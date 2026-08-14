@@ -24,7 +24,7 @@ export default function Home(): ReactElement {
     execute(async () => {
       const infos: IGalleryInfoModified[] = await getAllGalleries();
       infos.forEach((info) => {
-        info._coverLink = toImageURL(info.info.id);
+        info._coverLink = toImageURL(info.info.id, 0, "thumbnail");
       });
       setGalleries(infos);
     }).then();

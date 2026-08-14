@@ -7,33 +7,41 @@ import {
   Ellipsis,
   ICrudyButtonProps,
   NewCrudyButtonEventEmitter,
-  Uploader,
 } from "@allape/gocrud-react";
 import {
-  App,
   Avatar,
   Divider,
   Form,
   FormInstance,
   Input,
   InputNumber,
-  Switch,
   TableColumnsType,
   Tag,
 } from "antd";
-import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { IGallery } from "common/src/model/gallery.ts";
+import { IItem } from "common/src/model/item.ts";
+import { ITag } from "common/src/model/tag.ts";
+import {
+  ChangeEvent,
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { GalleryItemHandler } from "../../api/gallery.ts";
-import { ItemCrudy, ItemTagHandler } from "../../api/item.ts";
-import { IGallery } from "../../model/gallery.ts";
-import { IItem, IItemSearchParams } from "../../model/item.ts";
-import { ITag } from "../../model/tag.ts";
+import { ItemCrudy, ItemTagHandler, upload } from "../../api/item.ts";
+import { IItemSearchParams } from "../../model/item.ts";
 import GallerySelector from "../GallerySelector";
 import TagSelector from "../TagSelector";
 
 interface IItemModified extends IItem {
   _src?: string;
-  _continuesUpload?: boolean;
+  _thumbnail?: string;
+
+  _file?: File;
 
   _galleryIds?: IGallery["id"][];
   _tagIds?: ITag["id"][];
@@ -58,7 +66,8 @@ export default function ItemCrudyButton({
   ...props
 }: IItemCrudyButtonProps): ReactElement {
   const { t } = useTranslation();
-  const { message } = App.useApp();
+
+  const fileRef = useRef<File>();
 
   const [searchParams] = useState<ISearchParams>(() => ({
     ...BaseSearchParams,
@@ -79,9 +88,10 @@ export default function ItemCrudyButton({
         dataIndex: "src",
         render: (_, record) => (
           <Avatar
-            src={record._src}
+            src={record._thumbnail}
+            shape="square"
             style={{ cursor: "pointer" }}
-            size={40}
+            size={100}
             onClick={() => window.open(record._src, "_blank")}
           />
         ),
@@ -142,6 +152,7 @@ export default function ItemCrudyButton({
 
       records.forEach((r) => {
         r._src = `${config.SERVER_STATIC_URL}${r.src}`;
+        r._thumbnail = `${config.SERVER_STATIC_URL}${r.thumbnail}`;
       });
 
       await ItemTagHandler.get<ITag, IItemModified>(
@@ -169,15 +180,8 @@ export default function ItemCrudyButton({
     [],
   );
 
-  const handleBeforeSave = useCallback((record: IRecord): IRecord => {
-    delete record._continuesUpload;
-    delete record._galleryIds;
-    delete record._tagIds;
-    return record;
-  }, []);
-
   const handleAfterSaved = useCallback(
-    async (record: IRecord, form: FormInstance<IRecord>): Promise<boolean> => {
+    async (record: IRecord, form: FormInstance<IRecord>) => {
       const galleryIds: IGallery["id"][] =
         form.getFieldValue("_galleryIds") || [];
       await GalleryItemHandler.saveAfterDelete(
@@ -198,23 +202,25 @@ export default function ItemCrudyButton({
           tagId: ti,
         })),
       );
-
-      const shouldStop: boolean = form.getFieldValue("_continuesUpload");
-
-      form.resetFields();
-      form.setFieldsValue({
-        _continuesUpload: true,
-        name: record.name,
-      });
-
-      if (shouldStop) {
-        message.success(t("item.saved")).then();
-        return false;
-      }
-      return true;
     },
-    [message, t],
+    [],
   );
+
+  const handleSave = useCallback(async (record: IRecord): Promise<IRecord> => {
+    return upload(
+      fileRef.current as File,
+      {
+        ...record,
+        _galleryIds: undefined,
+        _tagIds: undefined,
+        _file: undefined,
+      } as IRecord,
+    );
+  }, []);
+
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    fileRef.current = e.target.files?.[0];
+  }, []);
 
   const [defaultFormValue, setDefaultFormValue] = useState<Partial<IRecord>>(
     () => DefaultFormValue,
@@ -242,56 +248,73 @@ export default function ItemCrudyButton({
       searchParams={searchParams}
       defaultFormValue={defaultFormValue}
       afterListed={handleAfterListed}
-      beforeSave={handleBeforeSave}
       afterSaved={handleAfterSaved}
+      onSave={handleSave}
       emitter={emitter}
       {...props}
     >
-      <Form.Item name="_continuesUpload" label={t("item.continuesUpload")}>
-        <Switch />
-      </Form.Item>
+      {(record?: Partial<IRecord>) => (
+        <>
+          <Form.Item
+            name="_file"
+            label={t("item.src")}
+            rules={
+              record?.id
+                ? undefined
+                : [{ required: true, message: t("item.srcRequired") }]
+            }
+            extra={record?.id ? t("item.fileExtra") : undefined}
+          >
+            <Input
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleFileChange}
+            />
+          </Form.Item>
 
-      <Divider />
+          <Divider />
 
-      <Form.Item name="_galleryIds" label={t("item.galleries")}>
-        <GallerySelector mode="multiple" />
-      </Form.Item>
+          <Form.Item name="_galleryIds" label={t("item.galleries")}>
+            <GallerySelector mode="multiple" />
+          </Form.Item>
 
-      <Form.Item name="_tagIds" label={t("item.tags")}>
-        <TagSelector mode="multiple" />
-      </Form.Item>
+          <Form.Item name="_tagIds" label={t("item.tags")}>
+            <TagSelector mode="multiple" />
+          </Form.Item>
 
-      <Divider />
+          <Divider />
 
-      <Form.Item
-        name="src"
-        label={t("item.src")}
-        rules={[{ required: true, message: t("item.srcRequired") }]}
-      >
-        <Uploader serverURL={config.SERVER_STATIC_URL} />
-      </Form.Item>
+          {/*<Form.Item*/}
+          {/*  name="src"*/}
+          {/*  label={t("item.src")}*/}
+          {/*  rules={[{ required: true, message: t("item.srcRequired") }]}*/}
+          {/*>*/}
+          {/*  <Uploader serverURL={config.SERVER_STATIC_URL} />*/}
+          {/*</Form.Item>*/}
 
-      <Form.Item name="priority" label={t("item.priority")}>
-        <InputNumber
-          precision={0}
-          step={1}
-          min={Number.MIN_SAFE_INTEGER}
-          max={Number.MAX_SAFE_INTEGER}
-          placeholder={t("item.priority")}
-        />
-      </Form.Item>
+          <Form.Item name="priority" label={t("item.priority")}>
+            <InputNumber
+              precision={0}
+              step={1}
+              min={Number.MIN_SAFE_INTEGER}
+              max={Number.MAX_SAFE_INTEGER}
+              placeholder={t("item.priority")}
+            />
+          </Form.Item>
 
-      <Form.Item name="name" label={t("item.name")}>
-        <Input maxLength={50} placeholder={t("item.name")} />
-      </Form.Item>
+          <Form.Item name="name" label={t("item.name")}>
+            <Input maxLength={50} placeholder={t("item.name")} />
+          </Form.Item>
 
-      <Form.Item name="description" label={t("item.description")}>
-        <Input.TextArea
-          maxLength={20000}
-          rows={10}
-          placeholder={t("item.description")}
-        />
-      </Form.Item>
+          <Form.Item name="description" label={t("item.description")}>
+            <Input.TextArea
+              maxLength={20000}
+              rows={10}
+              placeholder={t("item.description")}
+            />
+          </Form.Item>
+        </>
+      )}
     </CrudyButton>
   );
 }

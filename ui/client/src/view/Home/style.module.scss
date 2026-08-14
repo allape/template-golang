@@ -8,6 +8,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 
   .loading {
     display: flex;
@@ -22,7 +23,7 @@
     height: 300px;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 

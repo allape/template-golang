@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"encoding/json"
+	"path"
 	"slices"
 	"strings"
 
@@ -40,10 +42,6 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 		},
 		WillSave: func(record *model.Item, context *gin.Context, db *gorm.DB) {
 			record.Name = strings.TrimSpace(record.Name)
-			if len(record.Name) > model.MaxItemNameLength {
-				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "name too long")
-				return
-			}
 
 			record.CreatedBy = gophorward.UserID(strings.TrimSpace(string(record.CreatedBy)))
 			if record.CreatedBy == "" {
@@ -54,6 +52,75 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
+
+	group.POST("/upload", func(context *gin.Context) {
+		mpForm, err := context.MultipartForm()
+		if err != nil {
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), err)
+			return
+		}
+
+		mpRecord, ok := mpForm.Value["record"]
+		if !ok || len(mpRecord) == 0 {
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "record data not found")
+			return
+		}
+
+		var record model.Item
+		err = json.Unmarshal([]byte(mpRecord[0]), &record)
+		if err != nil {
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "record data is invalid")
+			return
+		}
+
+		if record.ID == 0 {
+			mpFiles, ok := mpForm.File["file"]
+			if !ok || len(mpFiles) == 0 {
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "no file in form")
+				return
+			}
+			mpFile := mpFiles[0]
+
+			file, err := mpFile.Open()
+			if err != nil {
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "mp file is invalid")
+				return
+			}
+			defer func() {
+				_ = file.Close()
+			}()
+
+			filenameSrc, filenameThu, err := model.SaveFile(db, file, mpFile.Size, path.Ext(mpFile.Filename))
+			if err != nil {
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), err)
+				return
+			}
+
+			record.Src = filenameSrc
+			record.Thumbnail = filenameThu
+		} else {
+			var old model.Item
+			if err := db.Model(&old).Where("id = ?", record.ID).First(&old).Error; err != nil {
+				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "record not found")
+				return
+			}
+
+			record.Thumbnail = old.Thumbnail
+			record.Src = old.Src
+		}
+
+		if record.CreatedBy == "" {
+			record.CreatedBy = "0"
+		}
+
+		if err := db.Save(&record).Error; err != nil {
+			itemL.Error().Printf("record save error: %s", err)
+			gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), "failed to save record [error]")
+			return
+		}
+
+		gocrud.MakeOkayDataResponse(context, record)
+	})
 
 	return nil
 }

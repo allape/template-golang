@@ -4,6 +4,7 @@ import { ITag } from "./tag.ts";
 export interface IItem extends IBase {
   name: string;
   src: string;
+  thumbnail: string;
   description: string;
   createdBy: string;
 }

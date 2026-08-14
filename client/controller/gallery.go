@@ -20,6 +20,15 @@ import (
 
 var galleryl = gogger.New("client:controller:gallery")
 
+type ImageType string
+
+const (
+	ImageTypeSrc       ImageType = "src"
+	ImageTypeThumbnail ImageType = "thumbnail"
+)
+
+var ImageTypes = []ImageType{ImageTypeSrc, ImageTypeThumbnail}
+
 // TODO cache for data
 
 type GalleryInfo struct {
@@ -47,10 +56,11 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		var galleries []model.Gallery
 		if err := db.Model(&model.Gallery{}).
 			Where(
-				"created_by = ? OR id IN (SELECT ug.gallery_id FROM user_galleries ug WHERE ug.user_id = ?)",
+				"created_by = ? OR id IN (SELECT ug.gallery_id FROM user_galleries ug WHERE ug.user_id = ?) AND `deleted_at` IS NULL",
 				user.ID,
 				user.ID,
 			).
+			Order("`priority` DESC, `updated_at` DESC").
 			Find(&galleries).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery: %v", err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get gallery [error]")
@@ -77,7 +87,10 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		}
 
 		var tags []model.Tag
-		if err := db.Model(&model.Tag{}).Where("`id` IN ?", tagIds).Find(&tags).Error; err != nil {
+		if err := db.Model(&model.Tag{}).
+			Where("`id` IN ? AND `deleted_at` IS NULL", tagIds).
+			Order("`priority` DESC, `updated_at` DESC").
+			Find(&tags).Error; err != nil {
 			galleryl.Error().Printf("failed to get tags: %v", err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to get tags [error]")
 			return
@@ -143,7 +156,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		var payload GalleryDetailPayload
 
 		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("`id` = ?", galleryId).First(&gallery).Error; err != nil {
+		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL", galleryId).First(&gallery).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery by %d: %v", galleryId, err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find gallery [error]")
 			return
@@ -162,10 +175,13 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		payload.Gallery = gallery
 
 		var items []model.Item
-		if err := db.Model(&model.Item{}).Where(
-			"`id` IN (SELECT `gi`.`item_id` FROM `gallery_items` `gi` WHERE `gi`.`gallery_id` = ?)",
-			galleryId,
-		).Find(&items).Error; err != nil {
+		if err := db.Model(&model.Item{}).
+			Where(
+				"`id` IN (SELECT `gi`.`item_id` FROM `gallery_items` `gi` WHERE `gi`.`gallery_id` = ?) AND `deleted_at` IS NULL",
+				galleryId,
+			).
+			Order("`priority` DESC, `updated_at` DESC").
+			Find(&items).Error; err != nil {
 			galleryl.Error().Printf("failed to get item by gallery id %d: %v", galleryId, err)
 			gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find items [error]")
 			return
@@ -211,7 +227,10 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 
 		if len(tagIds) > 0 {
 			var tags []model.Tag
-			if err := db.Model(&model.Tag{}).Where("`id` IN ?", tagIds).Find(&tags).Error; err != nil {
+			if err := db.Model(&model.Tag{}).
+				Where("`id` IN ? AND `deleted_at` IS NULL", tagIds).
+				Order("`priority` DESC, `updated_at` DESC").
+				Find(&tags).Error; err != nil {
 				galleryl.Error().Printf("failed to get tags by gallery id %d: %v", galleryId, err)
 				gocrud.MakeErrorResponse(context, gocrud.RestCoder.InternalServerError(), "failed to find tags [error]")
 				return
@@ -230,11 +249,17 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 	}
 
 	// retrieving the first image of the gallery of :galleryId when :itemId is 0
-	group.GET("/image/:galleryId/:itemId", func(context *gin.Context) {
+	group.GET("/:type/:galleryId/:itemId", func(context *gin.Context) {
 		user, ok := gophorward.GinGetUser(context)
 		if !ok {
 			//Make401Response(context)
 			makeErrorImageResponse(context, asset.DameMan, http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+			return
+		}
+
+		imageType := ImageType(context.Param("type"))
+		if !slices.Contains(ImageTypes, imageType) {
+			makeErrorImageResponse(context, nil, http.StatusNotFound, "image type invalid")
 			return
 		}
 
@@ -245,7 +270,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		}
 
 		var gallery model.Gallery
-		if err := db.Model(&gallery).Where("`id` = ?", galleryId).First(&gallery).Error; err != nil {
+		if err := db.Model(&gallery).Where("`id` = ? AND `deleted_at` IS NULL", galleryId).First(&gallery).Error; err != nil {
 			galleryl.Error().Printf("failed to get gallery: %v", err)
 			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find gallery [error]")
 			return
@@ -274,8 +299,8 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		if itemId == 0 {
 			err = db.Model(&model.Item{}).
 				Joins("JOIN gallery_items ON gallery_items.item_id = items.id").
-				Where("gallery_items.gallery_id = ?", gallery.ID).
-				Order("`priority` ASC, `updated_at` DESC").
+				Where("gallery_items.gallery_id = ? AND items.deleted_at IS NULL", gallery.ID).
+				Order("items.priority DESC, items.updated_at DESC").
 				Limit(1).
 				Find(&items).Error
 		} else {
@@ -295,13 +320,22 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 
 		item := items[0]
 
-		if item.Src == "" {
+		var src string
+
+		switch imageType {
+		case ImageTypeSrc:
+			src = item.Src
+		case ImageTypeThumbnail:
+			src = item.Thumbnail
+		}
+
+		if src == "" {
 			galleryl.Error().Printf("item src is empty for %d", item.ID)
 			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "src is empty")
 			return
 		}
 
-		file, err := os.Open(path.Join(env.StaticFolder, item.Src))
+		file, err := os.Open(path.Join(env.StaticFolder, src))
 		if err != nil {
 			galleryl.Error().Printf("failed to open gallery item file by gallery id %d and item id %d: %v", galleryId, itemId, err)
 			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to open gallery item file [error]")
@@ -309,7 +343,7 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 		}
 
 		var fileObject model.FileObject
-		if err := db.Model(&fileObject).Where("`filename` = ?", item.Src).First(&fileObject).Error; err != nil {
+		if err := db.Model(&fileObject).Where("`filename` = ?", src).First(&fileObject).Error; err != nil {
 			galleryl.Error().Printf("failed to get file object by item id %d: %v", itemId, err)
 			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find file object [error]")
 			return

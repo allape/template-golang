@@ -34,7 +34,7 @@ RUN npm run build
 
 FROM golang:1-alpine3.23 AS builder
 
-RUN apk update && apk add build-base
+RUN apk add --no-cache build-base
 
 WORKDIR /build
 
@@ -46,6 +46,8 @@ COPY . .
 RUN go build -o app .
 
 FROM alpine:3
+
+RUN apk add --no-cache ffmpeg exiftool
 
 WORKDIR /app
 

@@ -16,6 +16,7 @@ import styles from "./style.module.scss";
 
 interface IItemModified extends IItem {
   _src?: string;
+  _thumbnail?: string;
   _tags?: ITag[];
 }
 
@@ -61,6 +62,7 @@ export default function Gallery(): ReactElement {
         detail.items.map((item) => ({
           ...item,
           _src: toImageURL(parsedId, item.id),
+          _thumbnail: toImageURL(parsedId, item.id, "thumbnail"),
           _tags: detail.itemTags
             .filter((it) => it.itemId === item.id)
             .map((it) => detail.tags.find((t) => t.id === it.tagId) as ITag)
@@ -135,7 +137,7 @@ export default function Gallery(): ReactElement {
             <img
               className={styles.cover}
               loading="lazy"
-              src={item._src}
+              src={item._thumbnail}
               alt={item.name}
             />
             <div className={styles.tags}>
