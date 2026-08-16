@@ -14,7 +14,12 @@ import (
 var galleryL = l.New("gallery")
 
 func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
-	err := gocrud.Setup(group, db, galleryL.New("crud"), &gocrud.Crud[model.Gallery]{
+	NameDuplicateCheckFunc, err := gocrud.NewDuplicateFieldCheckFunc[model.Gallery](db, galleryL, "Name")
+	if err != nil {
+		return err
+	}
+
+	err = gocrud.Setup(group, db, galleryL.New("crud"), &gocrud.Crud[model.Gallery]{
 		EnableGetAll: true,
 		SearchHandlers: gocrud.BaseSearchHandlers(gocrud.SearchHandlers{
 			"like_name":     gocrud.KeywordLike("name", nil),
@@ -43,8 +48,12 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 				return
 			}
 
-			record.Keywords = strings.TrimSpace(record.Keywords)
+			err = NameDuplicateCheckFunc(context, record)
+			if err != nil {
+				return
+			}
 
+			record.Keywords = strings.TrimSpace(record.Keywords)
 			record.CreatedBy = gophorward.UserID(strings.TrimSpace(string(record.CreatedBy)))
 			if record.CreatedBy == "" {
 				record.CreatedBy = "0"
