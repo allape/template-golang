@@ -66,7 +66,13 @@
     padding: 0;
 
     .search {
-      margin-bottom: 5px;
+      margin-bottom: 0;
+      height: 38px;
+
+      .searchBox {
+        border-radius: 0;
+        border-color: transparent;
+      }
     }
 
     .galleries {
@@ -76,7 +82,11 @@
       .gallery {
         width: 100%;
         border-radius: 0;
-        margin-bottom: 5px;
+        margin-bottom: 0;
+
+        .name {
+          background-color: rgba(0, 0, 0, 0.8);
+        }
       }
     }
   }

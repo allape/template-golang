@@ -1,6 +1,6 @@
 import { useLoading, useProxy } from "@allape/use-loading";
 import { LoadingOutlined } from "@ant-design/icons";
-import { Empty, Input } from "antd";
+import { AutoComplete, AutoCompleteProps, Empty, Input } from "antd";
 import {
   KeyboardEvent,
   ReactElement,
@@ -38,6 +38,10 @@ export default function Home(): ReactElement {
   const infoRef = useRef<IGalleryInfoModified[]>([]);
   const [galleries, setGalleries] = useState<IGalleryInfoModified[]>([]);
 
+  const [autoCompleteOptions, setAutoCompleteOptions] = useState<
+    AutoCompleteProps["options"]
+  >([]);
+
   const handleSearch = useCallback(() => {
     clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
@@ -56,11 +60,25 @@ export default function Home(): ReactElement {
 
   useEffect(() => {
     execute(async () => {
+      const autoComOptions: AutoCompleteProps["options"] = [];
+
       const infos: IGalleryInfoModified[] = await getAllGalleries();
       infos.forEach((info) => {
         info._coverLink = toImageURL(info.info.id, 0, "thumbnail");
+
+        info.tags.map((tag) => {
+          if (!autoComOptions.find((aco) => aco.value === tag.name)) {
+            autoComOptions.push({
+              value: tag.name,
+              label: tag.name,
+            });
+          }
+        });
       });
+
       infoRef.current = infos;
+      setAutoCompleteOptions(autoComOptions);
+
       handleSearch();
     }).then();
   }, [execute, handleSearch]);
@@ -82,18 +100,22 @@ export default function Home(): ReactElement {
   return (
     <div className={styles.wrapper}>
       <div className={styles.search}>
-        <Input
-          type="search"
-          placeholder={t("home.search")}
-          value={keywords}
-          onChange={(e) => {
-            setKeywords(e.target.value);
-            handleSearch();
-          }}
-          onPressEnter={handleEnter}
-          onBlur={handleSearch}
-          allowClear
-        />
+        <AutoComplete options={autoCompleteOptions} showSearch>
+          <Input
+            className={styles.searchBox}
+            type="search"
+            size="large"
+            placeholder={t("home.search")}
+            value={keywords}
+            onChange={(e) => {
+              setKeywords(e.target.value);
+              handleSearch();
+            }}
+            onPressEnter={handleEnter}
+            onBlur={handleSearch}
+            allowClear
+          />
+        </AutoComplete>
       </div>
       {loading ? (
         <div className={styles.loading}>

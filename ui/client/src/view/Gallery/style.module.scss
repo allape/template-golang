@@ -92,6 +92,10 @@
   }
 
   @media screen and (max-width: $MinWrapperWidth) {
+    .title {
+      margin-bottom: 0;
+    }
+
     .items {
       padding: 0;
       display: block;
@@ -99,6 +103,7 @@
       .item {
         width: 100%;
         border-radius: 0;
+        margin-bottom: 0;
       }
     }
   }
