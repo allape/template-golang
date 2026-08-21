@@ -12,6 +12,7 @@ import (
 	"github.com/allape/golang/controller"
 	"github.com/allape/golang/env"
 	"github.com/allape/golang/model"
+	"github.com/allape/golang/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,6 +31,12 @@ func main() {
 	db, err := SetupDatabase()
 	if err != nil {
 		l.Error().Fatalf("failed to setup database: %v", err)
+		return
+	}
+
+	err = SetupServices(db)
+	if err != nil {
+		l.Error().Fatalf("failed to setup services: %v", err)
 		return
 	}
 
@@ -60,6 +67,17 @@ func main() {
 	}()
 
 	gogger.New("ctrl-c").Info().Println("exiting with", gocrud.Wait4CtrlC())
+}
+
+func SetupServices(db *gorm.DB) error {
+	var err error
+
+	err = service.SetupFileObjectHandlerService(db)
+	if err != nil {
+		return fmt.Errorf("failed to setup file object handler service: %v", err)
+	}
+
+	return nil
 }
 
 func SetupControllers(db *gorm.DB) (*gin.Engine, error) {

@@ -12,7 +12,7 @@ import (
 func SetupFileObjectController(group *gin.RouterGroup, db *gorm.DB) error {
 	return gocrud.NewHttpFileSystemObjectController[model.FileObject](
 		group, db, gogger.New("hfso:static"),
-		env.StaticFolder, &gocrud.HttpFileSystemConfig{
+		env.StaticFolder, &gocrud.HttpFileSystemObjectConfig[model.FileObject]{
 			AllowUpload:   true,
 			FileMasterKey: gocrud.SHASum256FromString(env.StaticFileMasterKey),
 		},

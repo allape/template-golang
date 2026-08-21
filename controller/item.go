@@ -8,6 +8,7 @@ import (
 
 	"github.com/allape/gocrud"
 	"github.com/allape/golang/model"
+	"github.com/allape/golang/service"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -84,7 +85,7 @@ func SetupItemController(group *gin.RouterGroup, db *gorm.DB) error {
 				_ = file.Close()
 			}()
 
-			filenameSrc, filenameThu, err := model.SaveFile(db, file, mpFile.Size, path.Ext(mpFile.Filename))
+			filenameSrc, filenameThu, err := service.SaveFile(file, mpFile.Size, path.Ext(mpFile.Filename))
 			if err != nil {
 				gocrud.MakeErrorResponse(context, gocrud.RestCoder.BadRequest(), err)
 				return
