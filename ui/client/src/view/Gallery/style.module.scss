@@ -1,7 +1,7 @@
-@import "../../style/common";
+@use "../../style/common";
 
 .wrapper {
-  max-width: $MaxWrapperWidth;
+  max-width: common.$MaxWrapperWidth;
   margin: 0 auto;
 
   .tags {
@@ -79,19 +79,19 @@
     }
   }
 
-  @media screen and (min-width: $MaxWrapperWidth) {
+  @media screen and (min-width: common.$MaxWrapperWidth) {
     .items {
       justify-content: space-between;
     }
   }
 
-  @media screen and (max-width: $MaxWrapperWidth) {
+  @media screen and (max-width: common.$MaxWrapperWidth) {
     .items {
       padding: 0 5px;
     }
   }
 
-  @media screen and (max-width: $MinWrapperWidth) {
+  @media screen and (max-width: common.$MinWrapperWidth) {
     .title {
       margin-bottom: 0;
     }

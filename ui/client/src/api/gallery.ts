@@ -6,11 +6,11 @@ import { ITag } from "common/src/model/tag.ts";
 
 export interface IGalleryInfo {
   info: IGallery;
-  tags: ITag[];
+  tags?: ITag[];
   /**
    * @deprecated
    */
-  cover: IItem;
+  cover?: IItem;
 }
 
 export function getAllGalleries(

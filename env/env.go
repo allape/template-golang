@@ -15,6 +15,7 @@ const (
 	uiFolder            = Project + "UI_FOLDER"
 	staticFolder        = Project + "STATIC_FOLDER"
 	staticFileMasterKey = Project + "STATIC_FILE_MASTER_KEY"
+	staticFileHashSalt  = Project + "STATIC_FILE_HASH_SALT"
 
 	clientBindAddr      = Project + "CLIENT_BIND_ADDR"
 	clientUIFolder      = Project + "CLIENT_UI_FOLDER"
@@ -32,6 +33,7 @@ var (
 	UIFolder            = goenv.Getenv(uiFolder, "./ui/admin/dist/index.html")
 	StaticFolder        = goenv.Getenv(staticFolder, "./static")
 	StaticFileMasterKey = goenv.Getenv(staticFileMasterKey, "78bZJ8hSCWkz8mcPRfLh")
+	StaticFileHashSalt  = goenv.Getenv(staticFileHashSalt, "Yvq0EkzlyDEzz7idE55k")
 
 	ClientBindAddr      = goenv.Getenv(clientBindAddr, ":8888")
 	ClientUIFolder      = goenv.Getenv(clientUIFolder, "./ui/client/dist/index.html")

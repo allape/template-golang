@@ -15,6 +15,7 @@ func SetupFileObjectController(group *gin.RouterGroup, db *gorm.DB) error {
 		env.StaticFolder, &gocrud.HttpFileSystemObjectConfig[model.FileObject]{
 			AllowUpload:   true,
 			FileMasterKey: gocrud.SHASum256FromString(env.StaticFileMasterKey),
+			FileHashSalt:  gocrud.SHASum256FromString(env.StaticFileHashSalt),
 		},
 		"",
 	)

@@ -130,8 +130,6 @@ export default function UserGalleryCrudyButton(
         <InputNumber
           precision={0}
           step={1}
-          min={1}
-          max={Number.MAX_SAFE_INTEGER}
           placeholder={t("user.gallery.userId")}
         />
       </Form.Item>

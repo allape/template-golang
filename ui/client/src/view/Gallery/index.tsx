@@ -140,13 +140,15 @@ export default function Gallery(): ReactElement {
               src={item._thumbnail}
               alt={item.name}
             />
-            <div className={styles.tags}>
-              {item._tags?.map((tag) => (
-                <Tag key={tag.id} className={styles.tag}>
-                  {tag.name}
-                </Tag>
-              ))}
-            </div>
+            {item._tags?.length && (
+              <div className={styles.tags}>
+                {item._tags.map((tag) => (
+                  <Tag key={tag.id} className={styles.tag}>
+                    {tag.name}
+                  </Tag>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>

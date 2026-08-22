@@ -2,8 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"os"
-	"path"
 	"slices"
 	"strconv"
 
@@ -11,8 +9,8 @@ import (
 	"github.com/allape/gogger"
 	"github.com/allape/golang/asset"
 	"github.com/allape/golang/client/helper"
-	"github.com/allape/golang/env"
 	"github.com/allape/golang/model"
+	"github.com/allape/golang/service"
 	"github.com/allape/gophorward"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -335,25 +333,10 @@ func SetupGalleryController(group *gin.RouterGroup, db *gorm.DB) error {
 			return
 		}
 
-		file, err := os.Open(path.Join(env.StaticFolder, src))
+		serveFunc, err := service.FileObjectHandler.NewServeFunc(src)
 		if err != nil {
-			galleryl.Error().Printf("failed to open gallery item file by gallery id %d and item id %d: %v", galleryId, itemId, err)
-			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to open gallery item file [error]")
-			return
-		}
-
-		var fileObject model.FileObject
-		if err := db.Model(&fileObject).Where("`filename` = ?", src).First(&fileObject).Error; err != nil {
-			galleryl.Error().Printf("failed to get file object by item id %d: %v", itemId, err)
-			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to find file object [error]")
-			return
-		}
-
-		serveFunc, err := gocrud.NewDareHttpServeFunc(file, fileObject.HttpFileSystemObjectBase.ToHttpFile())
-		if err != nil {
-			galleryl.Error().Printf("failed to decrypt file object by item id %d: %v", itemId, err)
-			makeErrorImageResponse(context, nil, http.StatusInternalServerError, "failed to decrypt file object [error]")
-			return
+			galleryl.Error().Printf("failed to create serve func for %d.%d: %v", galleryId, itemId, err)
+			makeErrorImageResponse(context, nil, http.StatusInternalServerError, err.Error())
 		}
 
 		serveFunc(context.Writer, context.Request)

@@ -51,7 +51,7 @@ export default function Home(): ReactElement {
           return (
             info.info.name.includes(keywordsRef.current) ||
             info.info.keywords.includes(keywordsRef.current) ||
-            !!info.tags.find((t) => t.name.includes(keywordsRef.current))
+            !!info.tags?.find((t) => t.name.includes(keywordsRef.current))
           );
         }),
       );
@@ -66,7 +66,7 @@ export default function Home(): ReactElement {
       infos.forEach((info) => {
         info._coverLink = toImageURL(info.info.id, 0, "thumbnail");
 
-        info.tags.map((tag) => {
+        info.tags?.map((tag) => {
           if (!autoComOptions.find((aco) => aco.value === tag.name)) {
             autoComOptions.push({
               value: tag.name,

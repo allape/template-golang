@@ -21,7 +21,9 @@ func SetupFileObjectHandlerService(db *gorm.DB) error {
 	var err error
 	FileObjectHandler, err = gocrud.NewHttpFileSystemObjectHandler[model.FileObject](
 		db, fileObjectL.New("handler"),
-		env.StaticFolder, gocrud.SHASum256FromString(env.StaticFileMasterKey),
+		env.StaticFolder,
+		gocrud.SHASum256FromString(env.StaticFileMasterKey),
+		gocrud.SHASum256FromString(env.StaticFileHashSalt),
 		"",
 	)
 	if err != nil {
@@ -120,8 +122,8 @@ func SaveFile(src io.ReadSeeker, size int64, ext string) (filenameSrc, filenameT
 		return
 	}
 
-	filenameSrc = string(dareSrc.Filename)
-	filenameThu = string(dareThu.Filename)
+	filenameSrc = string(dareSrc.Name)
+	filenameThu = string(dareThu.Name)
 
 	return
 }

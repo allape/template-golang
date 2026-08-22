@@ -1,8 +1,8 @@
-@import "../../style/common";
+@use "../../style/common";
 
 .wrapper {
   padding: 10px;
-  max-width: $MaxWrapperWidth;
+  max-width: common.$MaxWrapperWidth;
   box-sizing: border-box;
   margin: 0 auto;
 
@@ -62,7 +62,7 @@
   }
 
 
-  @media screen and (max-width: $MinWrapperWidth) {
+  @media screen and (max-width: common.$MinWrapperWidth) {
     padding: 0;
 
     .search {
@@ -91,13 +91,13 @@
     }
   }
 
-  @media screen and (max-width: $MaxWrapperWidth) {
+  @media screen and (max-width: common.$MaxWrapperWidth) {
     .galleries {
       justify-content: space-between;
     }
   }
 
-  @media screen and (min-width: $MaxWrapperWidth) {
+  @media screen and (min-width: common.$MaxWrapperWidth) {
     padding: 10px 0;
   }
 
