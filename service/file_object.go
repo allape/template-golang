@@ -19,7 +19,7 @@ var FileObjectHandler *gocrud.HttpFileSystemObjectHandler
 
 func SetupFileObjectHandlerService(db *gorm.DB) error {
 	var err error
-	FileObjectHandler, err = gocrud.NewHttpFileSystemObjectHandler[model.FileObject](
+	FileObjectHandler, err = gocrud.NewHttpFileSystemObjectHandler[model.FileObjectV1](
 		db, fileObjectL.New("handler"),
 		env.StaticFolder,
 		gocrud.SHASum256FromString(env.StaticFileMasterKey),

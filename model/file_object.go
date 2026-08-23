@@ -2,6 +2,6 @@ package model
 
 import "github.com/allape/gocrud"
 
-type FileObject struct {
+type FileObjectV1 struct {
 	gocrud.HttpFileSystemObjectBase
 }

@@ -10,9 +10,9 @@ import (
 )
 
 func SetupFileObjectController(group *gin.RouterGroup, db *gorm.DB) error {
-	return gocrud.NewHttpFileSystemObjectController[model.FileObject](
+	return gocrud.NewHttpFileSystemObjectController[model.FileObjectV1](
 		group, db, gogger.New("hfso:static"),
-		env.StaticFolder, &gocrud.HttpFileSystemObjectConfig[model.FileObject]{
+		env.StaticFolder, &gocrud.HttpFileSystemObjectConfig[model.FileObjectV1]{
 			AllowUpload:   true,
 			FileMasterKey: gocrud.SHASum256FromString(env.StaticFileMasterKey),
 			FileHashSalt:  gocrud.SHASum256FromString(env.StaticFileHashSalt),
