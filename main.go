@@ -72,7 +72,7 @@ func main() {
 func SetupServices(db *gorm.DB) error {
 	var err error
 
-	err = service.SetupFileObjectHandlerService(db)
+	_, err = service.SetupFileObjectHandlerService(db)
 	if err != nil {
 		return fmt.Errorf("failed to setup file object handler service: %v", err)
 	}

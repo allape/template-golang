@@ -17,7 +17,7 @@ var fileObjectL = l.New("fileobject")
 
 var FileObjectHandler *gocrud.HttpFileSystemObjectHandler
 
-func SetupFileObjectHandlerService(db *gorm.DB) error {
+func SetupFileObjectHandlerService(db *gorm.DB) (*gocrud.HttpFileSystemObjectHandler, error) {
 	var err error
 	FileObjectHandler, err = gocrud.NewHttpFileSystemObjectHandler[model.FileObjectV1](
 		db, fileObjectL.New("handler"),
@@ -27,9 +27,9 @@ func SetupFileObjectHandlerService(db *gorm.DB) error {
 		"",
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return FileObjectHandler, nil
 }
 
 func SaveFile(src io.ReadSeeker, size int64, ext string) (filenameSrc, filenameThu string, err error) {
