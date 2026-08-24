@@ -6,7 +6,7 @@ services:
     environment:
       PROJECTNAME_DATABASE_DSN: "root:2mu4XX0HBmajg7hcbFFn@tcp(database:3306)/projectname?charset=utf8mb4&parseTime=True&loc=Local"
       PROJECTNAME_STATIC_FILE_MASTER_KEY: "LU2SpvQeN5n9wgz1d7Wq"
-      GALLERY_STATIC_FILE_HASH_SALT: "yWQj0aXffk4oaAx66NIl"
+      PROJECTNAME_STATIC_FILE_HASH_SALT: "yWQj0aXffk4oaAx66NIl"
     volumes:
       - ./static:/app/static
     networks:
