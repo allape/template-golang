@@ -2,6 +2,7 @@ name: projectname
 services:
   app:
     image: allape/projectname:latest
+    container_name: projectname
     restart: unless-stopped
     environment:
       PROJECTNAME_DATABASE_DSN: "root:2mu4XX0HBmajg7hcbFFn@tcp(database:3306)/projectname?charset=utf8mb4&parseTime=True&loc=Local"
@@ -24,7 +25,7 @@ services:
       test: mysql -uroot -p"$$MYSQL_ROOT_PASSWORD" -e "SELECT 1" > /dev/null 2>&1 || exit 1
     environment:
       - MYSQL_ROOT_PASSWORD=2mu4XX0HBmajg7hcbFFn
-      - MYSQL_DATABASE=goor
+      - MYSQL_DATABASE=projectname
     volumes:
       - ./database:/var/lib/mysql
 networks:

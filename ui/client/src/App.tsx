@@ -20,7 +20,7 @@ export default function App(): ReactElement {
   return (
     <ThemeProvider locale={getLocale()}>
       <div className={styles.wrapper}>
-        <BrowserRouter>
+        <BrowserRouter basename="/ui/">
           <Routes>
             <Route index element={<Home />} />
             <Route path="/gallery/:galleryId" element={<Gallery />} />

@@ -1,9 +1,10 @@
 import { BaseSearchParams } from "@allape/gocrud";
 import { ICrudySelectorProps, PagedCrudySelector } from "@allape/gocrud-react";
+import { ITag } from "common/src/model/tag.ts";
 import { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TagCrudy } from "../../api/tag.ts";
-import { ITag, ITagSearchParams } from "../../model/tag.ts";
+import { ITagSearchParams } from "../../model/tag.ts";
 
 type IRecord = ITag;
 type ISearchParams = ITagSearchParams;

@@ -1,8 +1,16 @@
-FROM node:25 AS ui_admin_builder
+FROM node:25 AS builder_ui_common
 
-WORKDIR /build
+WORKDIR /build/common
 
 COPY ui/common .
+
+RUN npm install --no-audit
+
+FROM node:25 AS builder_ui_admin
+
+WORKDIR /build/common
+
+COPY --from=builder_ui_common /build/common .
 
 WORKDIR /build/ui
 
@@ -15,11 +23,11 @@ COPY ui/admin .
 
 RUN npm run build
 
-FROM node:25 AS ui_client_builder
+FROM node:25 AS builder_ui_client
 
-WORKDIR /build
+WORKDIR /build/common
 
-COPY ui/common .
+COPY --from=builder_ui_common /build/common .
 
 WORKDIR /build/ui
 
@@ -51,17 +59,18 @@ RUN apk add --no-cache ffmpeg exiftool
 
 WORKDIR /app
 
-COPY --from=ui_admin_builder /build/ui/dist ui/admin/dist
-COPY --from=ui_client_builder /build/ui/dist ui/client/dist
+COPY --from=builder_ui_admin /build/ui/dist ui/admin/dist
+COPY --from=builder_ui_client /build/ui/dist ui/client/dist
 COPY --from=builder /build/app app
 
 EXPOSE 8080
+EXPOSE 8888
 
 CMD [ "/app/app" ]
 
 ### BUILD ###
 # export x_docker_http_proxy="http://host.docker.internal:1080"
-# export x_docker_image_name="allape/projectname:8"
+# export x_docker_image_name="allape/projectname"
 # export x_docker_registry_prefix="docker-registry.lan.allape.cc/"
 # export x_docker_registry_image_name="$x_docker_registry_prefix$x_docker_image_name"
 

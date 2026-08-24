@@ -7,10 +7,11 @@ import {
 } from "@allape/gocrud-react";
 import { ICrudyButtonProps } from "@allape/gocrud-react/src/component/CrudyButton";
 import { Form, Input, InputNumber, TableColumnsType, Tag } from "antd";
+import { ITag } from "common/src/model/tag.ts";
 import { ReactElement, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { TagCrudy } from "../../api/tag.ts";
-import { ITag, ITagSearchParams } from "../../model/tag.ts";
+import { ITagSearchParams } from "../../model/tag.ts";
 
 type IRecord = ITag;
 type ISearchParams = ITagSearchParams;

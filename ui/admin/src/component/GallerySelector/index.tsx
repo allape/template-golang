@@ -1,9 +1,10 @@
 import { BaseSearchParams } from "@allape/gocrud";
 import { ICrudySelectorProps, PagedCrudySelector } from "@allape/gocrud-react";
+import { IGallery } from "common/src/model/gallery.ts";
 import { PropsWithChildren, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { GalleryCrudy } from "../../api/gallery.ts";
-import { IGallery, IGallerySearchParams } from "../../model/gallery.ts";
+import { IGallerySearchParams } from "../../model/gallery.ts";
 
 type IRecord = IGallery;
 type ISearchParams = IGallerySearchParams;
