@@ -2,13 +2,37 @@
 
 Template Project for My Golang CRUD
 
+### After Clone
+
+Search form `projectname` to replace it to the actual project name, regardless of case.
+
 ### Dev
+
+#### Backend
 
 ```shell
 go run .
 ```
 
+#### Frontend shared codes
+
 ```shell
+cd ui/common
+npm i
+```
+
+#### Frontend of Administration
+
+```shell
+cd ui/admin
+npm i
+npm run dev
+```
+
+#### Frontend of Client
+
+```shell
+cd ui/client
 npm i
 npm run dev
 ```
