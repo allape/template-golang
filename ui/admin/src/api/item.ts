@@ -17,7 +17,7 @@ export const ItemTagHandler = new AntdM2MConnectorHandler<
   IItem,
   ITag,
   IItemTag
->(`${config.SERVER_URL}/item-tag`, ItemCrudy, TagCrudy, "tagId", "itemId");
+>(`${config.SERVER_URL}/item-tag`, ItemCrudy, TagCrudy, "itemId", "tagId");
 
 export function upload(
   file: File,
